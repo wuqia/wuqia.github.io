@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 时代 —— 我们怎么赢</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;900&family=Noto+Serif+SC:wght@600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #060911;
+    --bg-panel: rgba(14, 21, 38, 0.78);
+    --bg-glass: rgba(20, 30, 52, 0.55);
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-cyan: rgba(56, 189, 248, 0.45);
+    --border-amber: rgba(245, 158, 11, 0.45);
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --text-dim: #64748B;
+    --cyan: #38BDF8;
+    --cyan-glow: rgba(56, 189, 248, 0.25);
+    --indigo: #818CF8;
+    --amber: #F59E0B;
+    --amber-glow: rgba(245, 158, 11, 0.25);
+    --rose: #FB7185;
+    --emerald: #34D399;
+    --scale: 1;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #030509;
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 16:9 固定 1920x1080 舞台自适应窗口缩放 */
+  #viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #stage {
+    position: absolute;
+    width: 1920px;
+    height: 1080px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--scale));
+    transform-origin: center center;
+    background: radial-gradient(circle at 80% 15%, rgba(56, 189, 248, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 18% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+                var(--bg-deep);
+    overflow: hidden;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+  }
+
+  /* 建筑蓝图网格层 */
+  .blueprint-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.65;
+  }
+
+  /* 顶部导航状态栏 */
+  .top-bar {
+    position: absolute;
+    top: 36px;
+    left: 72px;
+    right: 72px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 20;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 14px;
+    pointer-events: none;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .section-pill {
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid var(--border-cyan);
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  .top-bar-right {
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* 幻灯片容器 */
+  .slides-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 108px 72px 92px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(24px) scale(0.99);
+    transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  /* 入场渐显动画 */
+  .slide.active .anim-in {
+    animation: fadeSlideUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .anim-in {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  .delay-1 { animation-delay: 0.08s !important; }
+  .delay-2 { animation-delay: 0.18s !important; }
+  .delay-3 { animation-delay: 0.28s !important; }
+  .delay-4 { animation-delay: 0.38s !important; }
+
+  @keyframes fadeSlideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 点击分步浮现 (Steps) */
+  .step {
+    opacity: 0.12;
+    filter: blur(2px);
+    transform: translateY(12px);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .step.visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+
+  /* 字体排版系统 */
+  .eyebrow {
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eyebrow.amber { color: var(--amber); }
+  .eyebrow.emerald { color: var(--emerald); }
+  .eyebrow.rose { color: var(--rose); }
+
+  h1.hero-title {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 82px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+  }
+
+  h2.slide-title {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.16;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    max-width: 1580px;
+  }
+
+  .serif-accent {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+  }
+
+  .text-cyan { color: var(--cyan); }
+  .text-amber { color: var(--amber); }
+  .text-emerald { color: var(--emerald); }
+  .text-rose { color: var(--rose); }
+  .text-indigo { color: var(--indigo); }
+
+  .subtitle {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    max-width: 1280px;
+    margin-top: 10px;
+  }
+
+  /* 布局结构 */
+  .stage-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 44px;
+    margin-top: 22px;
+    position: relative;
+  }
+
+  .col-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .col-right {
+    flex: 1.15;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-glass {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 30px 36px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-glass.cyan-edge {
+    border-color: var(--border-cyan);
+    box-shadow: 0 16px 48px rgba(56, 189, 248, 0.1);
+  }
+
+  .card-glass.amber-edge {
+    border-color: var(--border-amber);
+    box-shadow: 0 16px 48px rgba(245, 158, 11, 0.1);
+  }
+
+  .card-glass.emerald-edge {
+    border-color: rgba(52, 211, 153, 0.45);
+    box-shadow: 0 16px 48px rgba(52, 211, 153, 0.1);
+  }
+
+  .metric-badge {
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    letter-spacing: 0.06em;
+  }
+
+  /* SVG 视觉容器 */
+  .visual-box {
+    width: 100%;
+    height: 640px;
+    background: rgba(10, 15, 28, 0.65);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 24px;
+  }
+
+  .visual-box svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* SVG 动态关键帧 */
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.04); }
+  }
+
+  @keyframes dashFlow {
+    to { stroke-dashoffset: -120; }
+  }
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .svg-flow {
+    stroke-dasharray: 10 8;
+    animation: dashFlow 4s linear infinite;
+  }
+
+  .svg-float {
+    animation: floatSlow 5s ease-in-out infinite;
+  }
+
+  .svg-pulse {
+    transform-origin: center;
+    animation: pulseGlow 3.2s ease-in-out infinite;
+  }
+
+  /* 底部 HUD 导航控制栏 */
+  .bottom-hud {
+    position: absolute;
+    bottom: 26px;
+    left: 72px;
+    right: 72px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .hud-left, .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .progress-track {
+    width: 240px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    width: 7%;
+    background: linear-gradient(90deg, var(--cyan), var(--amber));
+    transition: width 0.35s ease;
+  }
+
+  .step-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    transition: all 0.25s ease;
+  }
+
+  .step-dot.active {
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--amber);
+    transform: scale(1.2);
+  }
+
+  .kbd-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .kbd-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--cyan);
+    color: var(--text-main);
+  }
+
+  /* 演讲者逐字稿抽屉 (按 N 键切换) */
+  #notes-drawer {
+    position: absolute;
+    bottom: 84px;
+    right: 72px;
+    width: 780px;
+    max-height: 480px;
+    background: rgba(8, 13, 26, 0.96);
+    border: 1px solid var(--border-cyan);
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85);
+    z-index: 100;
+    padding: 26px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transform: translateY(30px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    backdrop-filter: blur(20px);
+    cursor: auto;
+  }
+
+  #notes-drawer.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 10px;
+    font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+  }
+
+  #notes-content {
+    font-size: 19px;
+    line-height: 1.7;
+    color: #E2E8F0;
+    overflow-y: auto;
+    padding-right: 8px;
+    user-select: text;
+  }
+
+  #notes-content p {
+    margin-bottom: 14px;
+  }
+
+  #notes-content strong {
+    color: var(--amber);
+  }
+
+  #notes-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  #notes-content::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div class="blueprint-grid"></div>
+    <canvas id="bg-canvas" width="1920" height="1080"></canvas>
+
+    <!-- 顶部状态栏 -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="section-pill" id="hud-section">开场导言</span>
+        <span id="hud-topic">MBAO 5580 · 人工智能商业战略与竞争优势</span>
+      </div>
+      <div class="top-bar-right">
+        加州多明尼克大学 (DOMINICAN UNIVERSITY OF CALIFORNIA) · 特邀讲座
+      </div>
+    </div>
+
+    <!-- =====================================================
+         15 张幻灯片正文
+    ====================================================== -->
+    <div class="slides-wrapper">
+
+      <!-- 第 1 页：标题与个人介绍 -->
+      <section class="slide active" data-section="开场导言" data-title="主题与演讲者介绍">
+        <div class="stage-body">
+          <div class="col-left" style="flex: 1.15;">
+            <div class="eyebrow anim-in">特邀主题分享</div>
+            <h1 class="hero-title anim-in delay-1">
+              如何在 <span class="text-cyan">AI 时代</span> <span class="serif-accent text-amber">决胜未来</span>
+            </h1>
+            <p class="subtitle anim-in delay-2" style="font-size: 27px; max-width: 880px;">
+              AI 在人类学习与生产中将扮演什么角色？当 AI 成为像电力一样的常态，哪些个人能力将真正闪耀？
+            </p>
+            <div class="card-glass cyan-edge anim-in delay-3" style="margin-top: 22px; max-width: 800px; display: flex; align-items: center; gap: 28px;">
+              <div style="width: 74px; height: 74px; border-radius: 16px; background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(245,158,11,0.25)); border: 1px solid var(--cyan); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk'; font-size: 30px; font-weight: 700; color: var(--text-main);">
+                QW
+              </div>
+              <div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--text-main);">
+                  吴强 · Zoro Wu
+                </div>
+                <div style="font-size: 19px; color: var(--cyan); margin-top: 4px; font-weight: 500;">
+                  工程经理 (Engineering Manager) · 16 年软件工程与科技团队管理经验
+                </div>
+                <div style="font-family: 'JetBrains Mono', 'Noto Sans SC'; font-size: 14px; color: var(--text-muted); margin-top: 6px;">
+                  美国硅谷 → 加州多明尼克大学 BAROWSKY 商学院 (MBAO 5580)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-right" style="flex: 0.95;">
+            <div class="visual-box anim-in delay-2" style="background: radial-gradient(circle at center, rgba(56,189,248,0.12), rgba(10,15,28,0.85));">
+              <svg viewBox="0 0 700 600">
+                <defs>
+                  <linearGradient id="gradCyan" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#38BDF8" />
+                    <stop offset="100%" stop-color="#818CF8" />
+                  </linearGradient>
+                  <linearGradient id="gradAmber" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#F59E0B" />
+                    <stop offset="100%" stop-color="#FB7185" />
+                  </linearGradient>
+                </defs>
+                <!-- 外层轨道环 -->
+                <circle cx="350" cy="300" r="240" fill="none" stroke="rgba(56,189,248,0.18)" stroke-width="1.5" stroke-dasharray="8 8" class="svg-flow" />
+                <circle cx="350" cy="300" r="185" fill="none" stroke="rgba(245,158,11,0.22)" stroke-width="1.5" />
+                <!-- 左半球：AI 算法与算力 -->
+                <path d="M 350 90 A 210 210 0 0 0 350 510 Z" fill="rgba(56,189,248,0.08)" stroke="url(#gradCyan)" stroke-width="3" />
+                <!-- 右半球：人类判断力与远见 -->
+                <path d="M 350 90 A 210 210 0 0 1 350 510 Z" fill="rgba(245,158,11,0.08)" stroke="url(#gradAmber)" stroke-width="3" />
+                <!-- 左侧神经网络几何网格 -->
+                <g stroke="#38BDF8" stroke-width="1.5" opacity="0.7">
+                  <line x1="350" y1="150" x2="210" y2="220" />
+                  <line x1="210" y1="220" x2="190" y2="330" />
+                  <line x1="190" y1="330" x2="350" y2="440" />
+                  <line x1="210" y1="220" x2="280" y2="300" />
+                  <line x1="190" y1="330" x2="280" y2="300" />
+                  <line x1="280" y1="300" x2="350" y2="300" />
+                </g>
+                <circle cx="210" cy="220" r="7" fill="#38BDF8" class="svg-pulse" />
+                <circle cx="190" cy="330" r="7" fill="#38BDF8" class="svg-pulse" />
+                <circle cx="280" cy="300" r="9" fill="#818CF8" />
+
+                <!-- 右侧人类黄金灵感弧线 -->
+                <path d="M 350 300 Q 430 190 490 250 T 460 400 Q 400 430 350 300" fill="none" stroke="url(#gradAmber)" stroke-width="3" />
+                <circle cx="490" cy="250" r="9" fill="#F59E0B" class="svg-pulse" />
+                <circle cx="460" cy="400" r="8" fill="#FB7185" class="svg-pulse" />
+
+                <!-- 中心聚变核 -->
+                <circle cx="350" cy="300" r="48" fill="#0B1325" stroke="#F8FAFC" stroke-width="3" />
+                <text x="350" y="295" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="16" font-weight="700">2026+</text>
+                <text x="350" y="317" text-anchor="middle" fill="#38BDF8" font-family="Noto Sans SC" font-size="13" font-weight="700">人机协同</text>
+
+                <!-- 标签 -->
+                <rect x="55" y="60" width="220" height="62" rx="10" fill="rgba(14,21,38,0.9)" stroke="#38BDF8" />
+                <text x="165" y="86" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="600">AI 引擎角色</text>
+                <text x="165" y="109" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="15">知识获取与白领产物生产</text>
+
+                <rect x="425" y="480" width="225" height="62" rx="10" fill="rgba(14,21,38,0.9)" stroke="#F59E0B" />
+                <text x="537" y="506" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="600">人类核心优势</text>
+                <text x="537" y="529" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="15">品味判断、全栈视野与领导力</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <template class="speaker-notes">
+          <p><strong>【第 1 页 —— 开场与个人介绍】</strong></p>
+          <p>“大家好！非常感谢 Tina 老师的邀请，让我今天有机会来到大家的课堂与各位交流。</p>
+          <p>在正式开始之前，我先简单介绍一下我自己。我叫<strong>吴强（Zoro Wu）</strong>，目前在硅谷担任工程经理（Engineering Manager）。过去 16 年我一直在软件工程与科技行业深耕，从一线工程师做到技术团队管理者，亲历了移动互联网、云计算到今天生成式 AI 的每一轮技术浪潮。</p>
+          <p>在过去几周的课程里，大家通过哈佛商学院的案例，深入剖析了中国平安、大众汽车、字节跳动和 DeepSeek 等企业是如何应对 AI 变革的[cite: 1]。今天，我想把视角从‘宏观企业战略’切换到‘<strong>我们每一个人身上</strong>’。</p>
+          <p>我今天分享的主题非常简单，但也非常紧迫：<strong>如何在 AI 时代决胜未来——它究竟需要我们具备什么样的能力？</strong>”</p>
+        </template>
+      </section>
+
+      <!-- 第 2 页：核心命题（当 AI 成为常态） -->
+      <section class="slide" data-section="开场导言" data-title="当 AI 成为基础常态">
+        <div>
+          <div class="eyebrow anim-in">核心立论</div>
+          <h2 class="slide-title anim-in delay-1">
+            当 AI 成为像<span class="text-cyan">电力</span>一样的常态，“会用 AI”本身将不再是优势
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            当所有人都能接入同样强大的前沿模型时，真正的竞争优势将从“拥有工具”转向“如何重构学习、生产与团队”。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- 天平底座 -->
+              <polygon points="840,390 780,510 900,510" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2.5" />
+              <line x1="540" y1="510" x2="1140" y2="510" stroke="#475569" stroke-width="4" />
+
+              <!-- 天平横梁 -->
+              <line x1="260" y1="340" x2="1420" y2="240" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round" />
+              <circle cx="840" cy="290" r="18" fill="#F59E0B" stroke="#060911" stroke-width="4" />
+
+              <!-- 分步 1：左侧托盘（AI 接管的角色） -->
+              <g class="step" data-step="1">
+                <line x1="360" y1="330" x2="360" y2="420" stroke="#38BDF8" stroke-width="3" stroke-dasharray="6 6" />
+                <rect x="90" y="95" width="550" height="215" rx="18" fill="rgba(14,21,38,0.92)" stroke="#38BDF8" stroke-width="2.5" />
+                <text x="130" y="145" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">问题 01 · AI 将承担什么角色？（基础标配）</text>
+                <text x="130" y="190" fill="#F8FAFC" font-family="Noto Sans SC" font-size="28" font-weight="800">极速执行、按需知识提取与白领产物生成</text>
+                <text x="130" y="236" fill="#94A3B8" font-family="Noto Sans SC" font-size="20">• 跨学科、无上限的知识广度与物理原理解析</text>
+                <text x="130" y="270" fill="#94A3B8" font-family="Noto Sans SC" font-size="20">• 自动生成表格、PPT、文档与软件代码</text>
+                <rect x="130" y="420" width="460" height="52" rx="10" fill="rgba(56,189,248,0.12)" stroke="#38BDF8" />
+                <text x="360" y="452" text-anchor="middle" fill="#38BDF8" font-family="Noto Sans SC" font-size="16" font-weight="700">获取成本正迅速趋近于廉价的 Token 费用</text>
+              </g>
+
+              <!-- 分步 2：右侧托盘（人类闪耀的能力） -->
+              <g class="step" data-step="2">
+                <line x1="1320" y1="250" x2="1320" y2="340" stroke="#F59E0B" stroke-width="3" stroke-dasharray="6 6" />
+                <rect x="1020" y="30" width="580" height="230" rx="18" fill="rgba(25,18,12,0.92)" stroke="#F59E0B" stroke-width="3" />
+                <text x="1060" y="78" fill="#F59E0B" font-family="JetBrains Mono" font-size="16" font-weight="700">问题 02 · 哪些个人能力将真正闪耀？（稀缺价值）</text>
+                <text x="1060" y="122" fill="#F8FAFC" font-family="Noto Sans SC" font-size="28" font-weight="800">目标定义、审美品味、全栈视野与团队赋能</text>
+                <text x="1060" y="166" fill="#E2E8F0" font-family="Noto Sans SC" font-size="20">• 以目标为导向，在创造过程中极速吸收新知</text>
+                <text x="1060" y="200" fill="#E2E8F0" font-family="Noto Sans SC" font-size="20">• 凭借行业积淀把控细节，打通垂直领域全链路</text>
+                <text x="1060" y="234" fill="#E2E8F0" font-family="Noto Sans SC" font-size="20">• 识别流程低效，发掘“新明星员工”，带动团队提效</text>
+                <rect x="1090" y="340" width="460" height="52" rx="10" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" />
+                <text x="1320" y="372" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="16" font-weight="700">这才是 2026+ 时代真正的个人与团队护城河</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 2 页 —— 核心命题：当 AI 成为常态】（含 2 个点击分步）</strong></p>
+          <p>“现在所有人都在问：<em>AI 能做什么？</em></p>
+          <p>但再过几年，AI 将不再是新鲜事物，它会像电力或互联网一样成为空气般的基础常态。当所有人都能用上最顶尖的大模型时，仅仅‘会用 AI’将不再构成你的核心竞争力。</p>
+          <p><strong>【点击第 1 步】</strong> 所以今天，我们要重点回答两个根本问题：第一，在我们的学习过程和生产过程中，AI 究竟会承接哪些角色？</p>
+          <p><strong>【点击第 2 步】</strong> 第二，当 AI 成为常态之后，我们身上哪些个人技能和领导者特质，才会在未来真正大放异彩？”</p>
+        </template>
+      </section>
+
+      <!-- 第 3 页：第一部分 —— 人类如何学习与指数级放大 -->
+      <section class="slide" data-section="第一部分 · 学习进化" data-title="人类学习规律与 AI 的指数级放大效应">
+        <div>
+          <div class="eyebrow anim-in">第一部分 · AI 是进化人类学习与生产过程的工具</div>
+          <h2 class="slide-title anim-in delay-1">
+            从通识认知积木到 <span class="text-cyan">AI 教学的指数级放大</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            从幼儿园到初中，我们学习语言、数学、基础物理与历史；由于认知具有复利效应，AI 教学的加速作用在更高学段会呈指数级放大。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- 坐标轴 -->
+              <line x1="120" y1="480" x2="1580" y2="480" stroke="#475569" stroke-width="3" />
+              <line x1="120" y1="60" x2="120" y2="480" stroke="#475569" stroke-width="3" />
+              <text x="1580" y="525" text-anchor="end" fill="#94A3B8" font-family="Noto Sans SC" font-size="16" font-weight="600">成长与求学阶段 →</text>
+              <text x="140" y="80" fill="#94A3B8" font-family="Noto Sans SC" font-size="16" font-weight="600">认知广度与专业掌控力 ↑</text>
+
+              <!-- 阶段分割线 -->
+              <line x1="620" y1="60" x2="620" y2="480" stroke="rgba(148,163,184,0.2)" stroke-width="2" stroke-dasharray="8 8" />
+              <line x1="1120" y1="60" x2="1120" y2="480" stroke="rgba(148,163,184,0.2)" stroke-width="2" stroke-dasharray="8 8" />
+              <text x="370" y="525" text-anchor="middle" fill="#38BDF8" font-family="Noto Sans SC" font-size="20" font-weight="700">幼儿园 – 初中（通识基础）</text>
+              <text x="870" y="525" text-anchor="middle" fill="#818CF8" font-family="Noto Sans SC" font-size="20" font-weight="700">高中 – 大学（专业分流）</text>
+              <text x="1350" y="525" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="20" font-weight="700">研究生与职业深耕</text>
+
+              <!-- 分步 1：通识认知积木与传统曲线 -->
+              <g class="step" data-step="1">
+                <rect x="160" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="212" y="430" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="18" font-weight="700">语言能力</text>
+
+                <rect x="275" y="390" width="95" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="322" y="430" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="18" font-weight="700">基础数学</text>
+
+                <rect x="380" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="432" y="430" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="18" font-weight="700">基础物理</text>
+
+                <rect x="495" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="547" y="430" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="18" font-weight="700">人文历史</text>
+
+                <!-- 传统线性成长曲线 -->
+                <path d="M 140 460 Q 650 380 1520 260" fill="none" stroke="#64748B" stroke-width="4" stroke-dasharray="10 8" />
+                <text x="1500" y="295" text-anchor="end" fill="#94A3B8" font-family="Noto Sans SC" font-size="17">传统学习速度（线性增长，受限于标准课时）</text>
+              </g>
+
+              <!-- 分步 2：AI 指数级放大曲线 -->
+              <g class="step" data-step="2">
+                <path d="M 140 460 C 520 420, 880 320, 1500 55" fill="none" stroke="url(#gradAmber)" stroke-width="8" />
+                <path d="M 140 460 C 520 420, 880 320, 1500 55 L 1500 260 Q 650 380 140 460 Z" fill="rgba(245,158,11,0.10)" />
+
+                <circle cx="620" cy="395" r="10" fill="#38BDF8" />
+                <circle cx="1120" cy="240" r="12" fill="#F59E0B" class="svg-pulse" />
+                <circle cx="1500" cy="55" r="15" fill="#FB7185" class="svg-pulse" />
+
+                <rect x="850" y="70" width="570" height="115" rx="14" fill="rgba(25,18,12,0.92)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="880" y="110" fill="#F59E0B" font-family="JetBrains Mono" font-size="16" font-weight="700">AI 助学的指数级复利效应 (EXPONENTIAL AMPLIFICATION)</text>
+                <text x="880" y="148" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">随着进入高年级与专业阶段，AI 教学效果呈指数级爆发</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 3 页 —— 人类如何学习与 AI 的指数级放大】（含 2 个点击分步）</strong></p>
+          <p>“我们先来看第一部分：<strong>AI 不仅仅是一个自动化工具，它正在从根本上进化我们人类‘学习’和‘生产’的过程。</strong></p>
+          <p>我们先回想一下，作为人类，我们是如何学习的？</p>
+          <p><strong>【点击第 1 步】</strong> 从幼儿园、小学到初中，我们经历的是<strong>通识知识学习（General Knowledge Learning）</strong>。在这个阶段，我们广泛吸收基础认知积木——包括语言、数学、基础物理、历史等等。</p>
+          <p><strong>【点击第 2 步】</strong> 哪怕在这个早期阶段，AI 也能极大加速我们的学习；而更重要的是，因为知识吸收是具有复利效应的，随着我们升入更高学段，<strong>AI 赋能教学的效果绝不是简单的线性相加，而是会呈指数级放大！</strong>”</p>
+        </template>
+      </section>
+
+      <!-- 第 4 页：颠覆专业领域学习 —— “现用现学 (Pay-As-You-Go)” 模式 -->
+      <section class="slide" data-section="第一部分 · 学习进化" data-title="颠覆专业学习：“现用现学”模式">
+        <div>
+          <div class="eyebrow amber anim-in">专业领域深造 · 高中、大学及职业阶段</div>
+          <h2 class="slide-title anim-in delay-1">
+            告别长达数年的枯燥铺垫，进入 <span class="text-amber">“现用现学 (Pay-As-You-Go)”</span> 时代
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            无需先把整本书的理论和实现细节背熟才动手；在创造与构建的过程中按需调取知识，在反复迭代中成为领域专家。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- 上半部分：传统“前置囤积式”学习模型 -->
+              <g class="step" data-step="1">
+                <rect x="60" y="40" width="1560" height="200" rx="18" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.25)" stroke-width="2" />
+                <text x="100" y="84" fill="#94A3B8" font-family="Noto Sans SC" font-size="16" font-weight="700">过去模式 · 漫长枯燥的“前置式学习”（耗费数年才能真正动手）</text>
+
+                <rect x="100" y="110" width="260" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="230" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="700">第 1–2 年：啃厚教材</text>
+                <text x="230" y="180" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="14">抽象概念与前置理论</text>
+
+                <rect x="390" y="110" width="260" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="520" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="700">第 3–4 年：死记硬背</text>
+                <text x="520" y="180" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="14">以防万一的理论储备</text>
+
+                <rect x="680" y="110" width="280" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="820" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="700">第 5 年+：实现细节</text>
+                <text x="820" y="180" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="14">繁琐语法与底层操练</text>
+
+                <line x1="975" y1="157" x2="1170" y2="157" stroke="#64748B" stroke-width="4" stroke-dasharray="8 8" />
+                <rect x="1185" y="110" width="380" height="95" rx="10" fill="rgba(251,113,133,0.12)" stroke="#FB7185" stroke-width="2" />
+                <text x="1375" y="152" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="22" font-weight="700">最后才开始动手创造</text>
+                <text x="1375" y="180" text-anchor="middle" fill="#FDA4AF" font-family="Noto Sans SC" font-size="14">周期极长 · 枯燥乏味 · 大量半途而废</text>
+              </g>
+
+              <!-- 下半部分：AI 时代“Pay-As-You-Go 现用现学”模式 -->
+              <g class="step" data-step="2">
+                <rect x="60" y="275" width="1560" height="255" rx="18" fill="rgba(14,25,45,0.9)" stroke="#38BDF8" stroke-width="3" />
+                <text x="100" y="320" fill="#38BDF8" font-family="Noto Sans SC" font-size="16" font-weight="700">AI 颠覆模式 · “Pay-As-You-Go 按需现用现学”飞轮（从第 1 天直接开始创造）</text>
+
+                <!-- 节点 1 -->
+                <rect x="100" y="355" width="320" height="130" rx="14" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="260" y="402" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="15" font-weight="700">DAY 01 · 直接上手</text>
+                <text x="260" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="26" font-weight="800">在构建与创造中起步</text>
+                <text x="260" y="466" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="16">以具体实战作品为锚点</text>
+
+                <path d="M 430 420 L 545 420" stroke="#38BDF8" stroke-width="4" class="svg-flow" />
+
+                <!-- 节点 2 -->
+                <rect x="555" y="345" width="470" height="150" rx="16" fill="rgba(56,189,248,0.16)" stroke="#38BDF8" stroke-width="3" />
+                <text x="790" y="390" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="15" font-weight="700">PAY-AS-YOU-GO · 随用随取</text>
+                <text x="790" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="26" font-weight="800">边做边向 AI 汲取相关知识</text>
+                <text x="790" y="460" text-anchor="middle" fill="#E2E8F0" font-family="Noto Sans SC" font-size="17">无需背诵整本教材，精准调取当下所需原理</text>
+                <!-- 循环箭头 -->
+                <path d="M 920 345 C 880 295, 700 295, 660 345" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="6 6" class="svg-flow" />
+                <text x="790" y="325" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="14" font-weight="700">↻ 在实战中成百上千次重复此循环</text>
+
+                <path d="M 1035 420 L 1145 420" stroke="#34D399" stroke-width="4" class="svg-flow" />
+
+                <!-- 节点 3 -->
+                <rect x="1155" y="355" width="420" height="130" rx="14" fill="rgba(52,211,153,0.15)" stroke="#34D399" stroke-width="2.5" />
+                <text x="1365" y="402" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="15" font-weight="700">EXPERT · 进化结果</text>
+                <text x="1365" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="26" font-weight="800">实战型领域专家</text>
+                <text x="1365" y="466" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="16">由无数次构建迭代淬炼而成</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 4 页 —— 颠覆专业学习：“现用现学”模式】（含 2 个点击分步）</strong></p>
+          <p>“接着，当我们升入高中、大学乃至步入职场，我们的学习开始聚焦于<strong>特定专业领域（Specialized Fields）</strong>。</p>
+          <p><strong>【点击第 1 步】</strong> 过去，要掌握一门专业，必须经历一个极其漫长、枯燥的前置过程，往往需要耗费好几年时间，把书本里的全部理论和实现细节通读背熟，然后才能开始动手做事。</p>
+          <p><strong>【点击第 2 步】</strong> <strong>而 AI 正在彻底颠覆这一过程。</strong> 未来的专业学习将变成一种<strong>‘现用现学（Pay-As-You-Go）’</strong>的模式。你从第一天起就直接动手构建和创造，在创造的过程中按需拾取最相关的知识。你一次又一次地重复‘构建—汲取—再构建’的循环，从而直接成长为该领域的专家，而根本不需要事先背熟书本里列出的所有理论和实现细节。”</p>
+        </template>
+      </section>
+
+      <!-- 第 5 页：具象案例 —— 打造一张木桌 -->
+      <section class="slide" data-section="第一部分 · 学习进化" data-title="案例解析：如何打造一张木桌">
+        <div>
+          <div class="eyebrow amber anim-in">具象化对比案例</div>
+          <h2 class="slide-title anim-in delay-1">
+            打造一张精致木桌：<span class="text-amber">师父的认知天花板</span> vs. <span class="text-cyan">AI 的无限广度与深度</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            过去我们受限于老师的知识储备与技艺上限；如今借助 AI，你可以深挖每一个细节背后的物理原理，无需数月机械重复。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- 左侧：过去跟师父学徒制 -->
+          <div class="card-glass amber-edge step" data-step="1" style="flex: 0.85; height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">过去 · 传统师徒观摩模式</span>
+              <h3 style="font-size: 34px; font-weight: 800; margin-top: 16px;">受限于老师的知识库与水平</h3>
+              <p style="font-size: 20px; color: var(--text-muted); line-height: 1.6; margin-top: 16px;">
+                想要做出一张好木桌，必须找一位已经是专家的木匠老师，在旁边观察、模仿：怎么钉钉子、怎么加固桌腿、怎么打磨抛光。
+              </p>
+            </div>
+
+            <svg viewBox="0 0 560 250" style="height: 230px;">
+              <rect x="20" y="20" width="520" height="210" rx="14" fill="rgba(0,0,0,0.35)" stroke="rgba(245,158,11,0.4)" stroke-dasharray="6 6" />
+              <line x1="20" y1="70" x2="540" y2="70" stroke="#FB7185" stroke-width="3" />
+              <text x="280" y="52" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="16" font-weight="700">▲ 硬性天花板 = 老师的个人认知与技能上限</text>
+              <text x="280" y="130" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">“照着我的手法钉，别问为什么”</text>
+              <text x="280" y="168" text-anchor="middle" fill="#94A3B8" font-family="Noto Sans SC" font-size="18">耗费数周数月反复试错 · 知其然不知其所以然</text>
+            </svg>
+
+            <div style="font-family: 'Noto Sans SC'; font-size: 16px; font-weight: 700; color: var(--rose);">
+              × 视野受限 · × 不懂底层物理 · × 漫长的重复试错
+            </div>
+          </div>
+
+          <!-- 右侧：AI 赋能木桌全息蓝图 -->
+          <div class="visual-box step" data-step="2" style="flex: 1.35; height: 600px; border-color: var(--border-cyan);">
+            <svg viewBox="0 0 980 560">
+              <text x="40" y="45" fill="#38BDF8" font-family="Noto Sans SC" font-size="17" font-weight="700">现在借助 AI · 自由探索任意广度与深度，直达每个微小细节背后的物理原理</text>
+
+              <!-- 3D 爆炸图桌面 -->
+              <polygon points="490,95 790,185 490,275 190,185" fill="rgba(245,158,11,0.18)" stroke="#F59E0B" stroke-width="3" class="svg-float" />
+              <polygon points="490,110 790,200 490,290 190,200" fill="none" stroke="rgba(56,189,248,0.5)" stroke-width="1.5" stroke-dasharray="5 5" />
+
+              <!-- 桌腿与横梁框架 -->
+              <line x1="240" y1="220" x2="240" y2="450" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" />
+              <line x1="490" y1="295" x2="490" y2="520" stroke="#38BDF8" stroke-width="12" stroke-linecap="round" />
+              <line x1="740" y1="220" x2="740" y2="450" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" />
+              <line x1="240" y1="280" x2="490" y2="355" stroke="#818CF8" stroke-width="6" />
+              <line x1="740" y1="280" x2="490" y2="355" stroke="#818CF8" stroke-width="6" />
+
+              <!-- 物理细节节点 1：表面打磨 -->
+              <circle cx="610" cy="175" r="9" fill="#F59E0B" class="svg-pulse" />
+              <line x1="610" y1="175" x2="700" y2="95" stroke="#F59E0B" stroke-width="2" />
+              <rect x="650" y="30" width="305" height="78" rx="10" fill="rgba(14,21,38,0.95)" stroke="#F59E0B" />
+              <text x="670" y="58" fill="#F59E0B" font-family="Noto Sans SC" font-size="14" font-weight="700">表面平滑打磨 · 材料微观力学</text>
+              <text x="670" y="86" fill="#F8FAFC" font-family="Noto Sans SC" font-size="15">木质纤维剪切角与砂纸目数摩擦系数</text>
+
+              <!-- 物理细节节点 2：钉入角度与榫卯受力 -->
+              <circle cx="490" cy="355" r="11" fill="#38BDF8" class="svg-pulse" />
+              <line x1="490" y1="355" x2="660" y2="395" stroke="#38BDF8" stroke-width="2" />
+              <rect x="645" y="355" width="310" height="92" rx="10" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" />
+              <text x="665" y="383" fill="#38BDF8" font-family="Noto Sans SC" font-size="14" font-weight="700">钉子角度与榫卯连接 · 结构物理理论</text>
+              <text x="665" y="410" fill="#F8FAFC" font-family="Noto Sans SC" font-size="15">为什么斜角钉入能抵抗横向剪切力：</text>
+              <text x="665" y="434" fill="#34D399" font-family="JetBrains Mono" font-size="14">τ_max = F · sin(θ) / A_contact</text>
+
+              <!-- 物理细节节点 3：整体防晃动稳定性 -->
+              <circle cx="240" cy="340" r="9" fill="#34D399" class="svg-pulse" />
+              <line x1="240" y1="340" x2="150" y2="390" stroke="#34D399" stroke-width="2" />
+              <rect x="25" y="365" width="295" height="88" rx="10" fill="rgba(14,21,38,0.95)" stroke="#34D399" />
+              <text x="45" y="393" fill="#34D399" font-family="Noto Sans SC" font-size="14" font-weight="700">桌体稳固原理 · 刚度与力矩分析</text>
+              <text x="45" y="419" fill="#F8FAFC" font-family="Noto Sans SC" font-size="15">重心分布与抗扭刚度建模</text>
+              <text x="45" y="441" fill="#94A3B8" font-family="Noto Sans SC" font-size="13">无需数月摸索，即时解锁无限设计可能</text>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 5 页 —— 具象案例：打造一张木桌】（含 2 个点击分步）</strong></p>
+          <p>“我们不妨举一个非常具体的例子：假设我们现在想做一张漂亮的<strong>木桌</strong>。</p>
+          <p><strong>【点击第 1 步】</strong> <strong>在过去</strong>，你要做出一张精致的木桌，必须找一位已经是行家的木匠老师，跟在他身边观察、模仿。这里面有无数琐碎的细节：怎么钉钉子、怎么让桌腿稳固不晃、怎么把桌面打磨光滑等等。在没有 AI 的时代，<strong>我们能达到的高度，完全受限于老师的知识储备和技能水平。</strong></p>
+          <p><strong>【点击第 2 步】</strong> <strong>而现在有了 AI</strong>，你可以随心所欲地向任意广度和深度探索——甚至可以深挖到每一个微小操作细节背后的<strong>物理学原理</strong>，搞清楚为什么要这样做。有了 AI，我们不再需要耗费几天甚至几个月去机械地重复试错，瞬间就拥有了近乎无限的可能性。”</p>
+        </template>
+      </section>
+
+      <!-- 第 6 页：第二部分 —— AI 作为生产工具（算盘与计算器） -->
+      <section class="slide" data-section="第二部分 · 生产工具" data-title="AI 作为生产工具：从算盘到计算器">
+        <div>
+          <div class="eyebrow anim-in">第二部分 · AI 作为生产工具</div>
+          <h2 class="slide-title anim-in delay-1">
+            正如计算器取代算盘，AI 正在取代传统的 <span class="text-cyan">“人 + 电脑”白领产物生产</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            电子表格、幻灯片、文档、软件代码等“白领产物”正在被 AI 接管，大量传统的“打算盘式技能”正在加速淘汰。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <!-- 阶段 1：人 + 算盘 -->
+              <g>
+                <rect x="60" y="70" width="440" height="400" rx="20" fill="rgba(15,23,42,0.75)" stroke="#475569" stroke-width="2" />
+                <text x="100" y="120" fill="#94A3B8" font-family="Noto Sans SC" font-size="15" font-weight="700">阶段 01 · 手工算术时代</text>
+                <text x="100" y="162" fill="#F8FAFC" font-family="Noto Sans SC" font-size="30" font-weight="800">人 + 算盘</text>
+                <!-- 算盘图形 -->
+                <rect x="120" y="200" width="320" height="160" rx="10" fill="#0F172A" stroke="#64748B" stroke-width="3" />
+                <line x1="120" y1="250" x2="440" y2="250" stroke="#64748B" stroke-width="3" />
+                <g fill="#F59E0B" opacity="0.7">
+                  <circle cx="170" cy="225" r="12" /><circle cx="240" cy="225" r="12" /><circle cx="310" cy="225" r="12" /><circle cx="380" cy="225" r="12" />
+                  <circle cx="170" cy="285" r="12" /><circle cx="240" cy="315" r="12" /><circle cx="310" cy="285" r="12" /><circle cx="380" cy="325" r="12" />
+                </g>
+                <text x="280" y="415" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="16" font-weight="700">被电子计算器彻底取代</text>
+              </g>
+
+              <!-- 阶段 2：人 + 电脑（正在被淘汰） -->
+              <g class="step" data-step="1">
+                <rect x="570" y="70" width="520" height="400" rx="20" fill="rgba(15,23,42,0.85)" stroke="#FB7185" stroke-width="2.5" />
+                <text x="610" y="120" fill="#FB7185" font-family="Noto Sans SC" font-size="15" font-weight="700">阶段 02 · 手工白领产物时代 (1995–2024)</text>
+                <text x="610" y="162" fill="#F8FAFC" font-family="Noto Sans SC" font-size="30" font-weight="800">人 + 电脑</text>
+
+                <rect x="610" y="195" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="715" y="238" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="600">电子表格 (Excel)</text>
+
+                <rect x="840" y="195" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="945" y="238" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="600">演示文稿 (Slides)</text>
+
+                <rect x="610" y="280" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="715" y="323" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="600">商业文档 (Docs)</text>
+
+                <rect x="840" y="280" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="945" y="323" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="20" font-weight="600">软件代码 (Code)</text>
+
+                <!-- 淘汰印章 -->
+                <g transform="translate(830, 275) rotate(-14)">
+                  <rect x="-200" y="-42" width="400" height="84" rx="10" fill="rgba(251,113,133,0.20)" stroke="#FB7185" stroke-width="4" />
+                  <text x="0" y="11" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="28" font-weight="900" letter-spacing="4">珠算式技能 · 正在淘汰</text>
+                </g>
+                <text x="830" y="415" text-anchor="middle" fill="#94A3B8" font-family="Noto Sans SC" font-size="18">手动写公式、排版对齐、逐行敲模板代码</text>
+              </g>
+
+              <!-- 阶段 3：人 + AI -->
+              <g class="step" data-step="2">
+                <rect x="1160" y="70" width="460" height="400" rx="20" fill="rgba(14,28,50,0.92)" stroke="#38BDF8" stroke-width="3" />
+                <text x="1200" y="120" fill="#38BDF8" font-family="Noto Sans SC" font-size="15" font-weight="700">阶段 03 · 意图驱动生产时代 (2026+)</text>
+                <text x="1200" y="162" fill="#F8FAFC" font-family="Noto Sans SC" font-size="30" font-weight="800">人类意图 + AI 生产</text>
+
+                <circle cx="1390" cy="275" r="78" fill="rgba(56,189,248,0.15)" stroke="#38BDF8" stroke-width="3" class="svg-pulse" />
+                <text x="1390" y="270" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="800">AI 生产引擎</text>
+                <text x="1390" y="298" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="14">PRODUCTION</text>
+
+                <text x="1390" y="415" text-anchor="middle" fill="#34D399" font-family="Noto Sans SC" font-size="17" font-weight="700">十倍至百倍产出效率 · 重构个人能力边界</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 6 页 —— AI 作为生产工具：从算盘到计算器】（含 2 个点击分步）</strong></p>
+          <p>“这就引出了我们的第二部分：<strong>AI 作为生产工具（AI as a Production Tool）。</strong></p>
+          <p>截至今天，AI 在生产所谓的<strong>‘白领产物’（White-Collar Artifacts）</strong>——比如电子表格、幻灯片、文档、软件程序等方面，已经证明了极其惊人的成功率。</p>
+          <p><strong>【点击第 1 步】</strong> 这非常像当年<strong>计算器取代算盘</strong>的过程。今天，AI 正在生产流程中大面积取代过去的<strong>‘人 + 电脑’组合</strong>。</p>
+          <p><strong>【点击第 2 步】</strong> 过去需要人类坐在电脑前耗费大量精力练就的‘打算盘式技能’（Abacus skills），如今正在被大批量废弃（Deprecated），不再像过去那样具有核心价值了。”</p>
+        </template>
+      </section>
+
+      <!-- 第 7 页：如果你原本不具备这些技能 —— 重大利好 -->
+      <section class="slide" data-section="第二部分 · 生产工具" data-title="情境 A：如果你过去不具备这些技能">
+        <div>
+          <div class="eyebrow emerald anim-in">情境 A · 如果你过去并不具备这些专业生产技能</div>
+          <h2 class="slide-title anim-in delay-1">
+            天大的好消息：你几乎可以 <span class="text-emerald">“免费”</span> 获得全套装备，释放个人无限潜能
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            这极大地拓宽了你作为个体能做成的事情边界——你只需要支付两笔小小的“入场成本”。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- 左侧：个人能力解锁图 -->
+          <div class="visual-box anim-in delay-2" style="flex: 1.15; height: 600px;">
+            <svg viewBox="0 0 920 540">
+              <circle cx="460" cy="240" r="78" fill="rgba(52,211,153,0.16)" stroke="#34D399" stroke-width="3" />
+              <text x="460" y="232" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="26" font-weight="800">你（超级个体）</text>
+              <text x="460" y="262" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="14">SUPER INDIVIDUAL</text>
+
+              <g stroke="#34D399" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow">
+                <line x1="390" y1="190" x2="230" y2="110" />
+                <line x1="530" y1="190" x2="690" y2="110" />
+                <line x1="390" y1="290" x2="230" y2="370" />
+                <line x1="530" y1="290" x2="690" y2="370" />
+              </g>
+
+              <rect x="55" y="55" width="265" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="187" y="92" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">“免费”装备能力 01</text>
+              <text x="187" y="122" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">编写软件与自动化脚本</text>
+
+              <rect x="600" y="55" width="265" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="732" y="92" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">“免费”装备能力 02</text>
+              <text x="732" y="122" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">复杂财务与数据建模</text>
+
+              <rect x="55" y="330" width="265" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="187" y="367" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">“免费”装备能力 03</text>
+              <text x="187" y="397" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">高管级演示文稿设计</text>
+
+              <rect x="600" y="330" width="265" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="732" y="367" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">“免费”装备能力 04</text>
+              <text x="732" y="397" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">跨语种商业与法规研报</text>
+
+              <rect x="170" y="460" width="580" height="52" rx="12" fill="rgba(52,211,153,0.12)" stroke="#34D399" />
+              <text x="460" y="492" text-anchor="middle" fill="#34D399" font-family="Noto Sans SC" font-size="17" font-weight="700">一个人即可完成过去需要多部门协作才能交付的产出</text>
+            </svg>
+          </div>
+
+          <!-- 右侧：两项必须支付的成本 -->
+          <div class="col-left" style="flex: 0.9; gap: 28px;">
+            <div class="card-glass cyan-edge step" data-step="1">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">成本 01 · 小额资金使用成本</span>
+              <h3 style="font-size: 32px; font-weight: 800; margin-top: 14px;">为 “Token” 付费</h3>
+              <p style="font-size: 20px; color: var(--text-muted); line-height: 1.55; margin-top: 10px;">
+                调用 AI 算力需要支付小额的 Token 费用——但相比于雇佣专业人力的成本，这几乎可以忽略不计。
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">成本 02 · 必须愿意投入的“沉没成本”</span>
+              <h3 style="font-size: 32px; font-weight: 800; margin-top: 14px;">学习全新生产模式与能力边界</h3>
+              <p style="font-size: 20px; color: var(--text-muted); line-height: 1.55; margin-top: 10px;">
+                你必须主动投入时间和精力，去熟悉这套全新的 AI 生产范式，并在不断尝试中真正理解那个被成倍拓宽的“可能性宇宙”。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 7 页 —— 如果你过去并不具备这些技能】（含 2 个点击分步）</strong></p>
+          <p>“那么，这对我们每个人意味着什么？这取决于你今天所处的位置。</p>
+          <p><strong>第一种情况：如果你过去并不具备这些专业白领技能——那对你来说简直是天大的好消息！</strong> 你现在几乎可以‘免费’把这些技能全部装备到自己身上。仅此一点，就会彻底释放你作为个体所能做到的事情的无限可能。</p>
+          <p><strong>【点击第 1 步】</strong> 当然，这个‘免费’依然有两个小小的代价：第一，是一笔很小的 AI 使用成本——也就是为<strong>‘Token’</strong>买单。</p>
+          <p><strong>【点击第 2 步】</strong> 第二，是你必须愿意付出一笔<strong>‘沉没成本（Sunk Cost）’</strong>——那就是投入精力去学习这套全新的生产模式，熟悉它、摸索它，从而真正看清那个被全新打开的‘可能性宇宙’有多大。”</p>
+        </template>
+      </section>
+
+      <!-- 第 8 页：如果你已经具备这些技能 —— 卸载旧包袱，打通垂直全链路 -->
+      <section class="slide" data-section="第二部分 · 生产工具" data-title="情境 B：如果你今天已经具备这些技能">
+        <div>
+          <div class="eyebrow rose anim-in">情境 B · 如果你今天已经拥有这些传统专业技能</div>
+          <h2 class="slide-title anim-in delay-1">
+            主动卸载旧习惯，保留<span class="text-amber">专业嗅觉</span>，向垂直领域<span class="text-cyan">上下游全链路</span>进发
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            过往经验让你对细节和产品质感更有优势；但如果不尽快成长为“多面手”，单点优势将不再重要。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <text x="80" y="55" fill="#94A3B8" font-family="Noto Sans SC" font-size="16" font-weight="700">所在业务领域的垂直全链路管道 (VERTICAL DOMAIN PIPELINE)</text>
+
+              <g transform="translate(80, 85)">
+                <rect x="0" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="140" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">上游环节 01</text>
+                <text x="140" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="24" font-weight="700">用户与商业洞察</text>
+
+                <rect x="310" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="450" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">上游环节 02</text>
+                <text x="450" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="24" font-weight="700">产品定义与设计</text>
+
+                <!-- 原本单一专业模块 -->
+                <rect x="620" y="0" width="280" height="150" rx="14" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" stroke-width="3" />
+                <text x="760" y="48" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="14" font-weight="700">你过去擅长的单一模块</text>
+                <text x="760" y="86" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="24" font-weight="800">核心研发 / 专业制作</text>
+                <text x="760" y="118" text-anchor="middle" fill="#FDE68A" font-family="Noto Sans SC" font-size="14">★ 优势：细节把控与产品直觉</text>
+
+                <rect x="930" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="1070" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">下游环节 04</text>
+                <text x="1070" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="24" font-weight="700">数据验证与分析</text>
+
+                <rect x="1240" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="1380" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">下游环节 05</text>
+                <text x="1380" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="24" font-weight="700">市场落地与增长</text>
+              </g>
+
+              <!-- 分步 1：心态转变与卸载加载 -->
+              <g class="step" data-step="1">
+                <rect x="490" y="265" width="700" height="95" rx="14" fill="rgba(251,113,133,0.12)" stroke="#FB7185" stroke-width="2" />
+                <text x="840" y="305" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="15" font-weight="700">第一步 · 心态归零与技能换代</text>
+                <text x="840" y="338" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="21" font-weight="600">卸载旧的手工操作习惯 + 加载 AI 新技能（发挥你对细节与质感的审美优势）</text>
+              </g>
+
+              <!-- 分步 2：迈出舒适区，成为全链路多面手 -->
+              <g class="step" data-step="2">
+                <path d="M 680 435 L 120 435" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+                <polygon points="100,435 130,418 130,452" fill="#38BDF8" />
+                <path d="M 1000 435 L 1560 435" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+                <polygon points="1580,435 1550,418 1550,452" fill="#38BDF8" />
+
+                <rect x="80" y="385" width="1520" height="110" rx="18" fill="rgba(56,189,248,0.14)" stroke="#38BDF8" stroke-width="3" />
+                <text x="840" y="430" text-anchor="middle" fill="#38BDF8" font-family="Noto Sans SC" font-size="16" font-weight="700">第二步 · 拒绝困守单一格子，成为多面手 (MULTI-FACETED PLAYER)</text>
+                <text x="840" y="468" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="27" font-weight="800">← 向前迈出一步，主动学习并打通你所在领域垂直管道的上下游全环节 →</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 8 页 —— 如果你今天已经具备这些技能】（含 2 个点击分步）</strong></p>
+          <p>“<strong>第二种情况：如果你今天已经具备了这些传统技能，怎么办？</strong> 坦率地说，你可能反而面临更大的心理挑战，你必须主动做出改变。</p>
+          <p><strong>【点击第 1 步】</strong> 首先是<strong>调整心态，卸载旧技能（Offloading old skills）并加载新技能（Loading new skills）</strong>。当然，你过去的经验绝没有白费——它让你对细节的把控更有优势，对产品好坏有更敏锐的直觉（Better sense）。</p>
+          <p><strong>【点击第 2 步】</strong> 但是，如果你不能跟上时代成为一名<strong>‘多面手’（Multi-faceted player）</strong>，仅靠单点上的细节优势将不再那么重要。所以，请勇敢向前迈出一步，去学习和掌握你所在领域<strong>垂直流水线（Vertical Pipeline）</strong>上的其他上下游环节！”</p>
+        </template>
+      </section>
+
+      <!-- 第 9 页：第三部分 —— 核心能力 #1：善用 AI 的极速学习者 -->
+      <section class="slide" data-section="第三部分 · 决胜法则" data-title="核心能力 #1：目标导向的极速学习者">
+        <div>
+          <div class="eyebrow anim-in">第三部分 · 如何作为个体胜出，并扩展为极具竞争力的团队</div>
+          <h2 class="slide-title anim-in delay-1">
+            核心能力 #1：成为善用 AI 工具、<span class="text-cyan">围绕目标极速吸收新知</span>的学习者
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            不再以“这不归我专业管”为借口；利用 AI 将原本需要数周的跨界学习压缩到数小时，直接服务于你的业务目标。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="flex: 1.05; height: 600px;">
+            <svg viewBox="0 0 840 540">
+              <rect x="40" y="70" width="200" height="400" rx="14" fill="#131C31" stroke="#475569" stroke-width="2" />
+              <text x="140" y="125" text-anchor="middle" fill="#94A3B8" font-family="JetBrains Mono" font-size="14">陌生跨界知识库</text>
+              <text x="140" y="155" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="700">复杂专业壁垒</text>
+              <text x="140" y="215" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="15">• 底层软件架构文档</text>
+              <text x="140" y="255" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="15">• 医疗合规与 PIPL 法规</text>
+              <text x="140" y="295" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="15">• NMPA 临床审批标准</text>
+              <text x="140" y="335" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="15">• 供应链运筹学模型</text>
+
+              <line x1="240" y1="160" x2="390" y2="240" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+              <line x1="240" y1="270" x2="390" y2="270" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+              <line x1="240" y1="380" x2="390" y2="300" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+
+              <!-- AI 棱镜 -->
+              <polygon points="430,130 330,370 530,370" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="3.5" />
+              <text x="430" y="312" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="20" font-weight="700">AI 知识提纯</text>
+              <text x="430" y="340" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13">GOAL FILTER</text>
+
+              <!-- 聚焦激光 -->
+              <line x1="485" y1="265" x2="690" y2="265" stroke="#F59E0B" stroke-width="8" />
+              <line x1="485" y1="265" x2="690" y2="265" stroke="#FEF08A" stroke-width="3" />
+
+              <!-- 靶心 -->
+              <circle cx="725" cy="265" r="68" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="3" class="svg-pulse" />
+              <circle cx="725" cy="265" r="36" fill="rgba(245,158,11,0.3)" stroke="#F59E0B" stroke-width="2" />
+              <circle cx="725" cy="265" r="12" fill="#F59E0B" />
+              <text x="725" y="375" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="16" font-weight="700">精准命中你的业务目标</text>
+            </svg>
+          </div>
+
+          <!-- 右侧：两个实战小案例 -->
+          <div class="col-left" style="flex: 1; gap: 26px;">
+            <div class="card-glass cyan-edge step" data-step="1">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">实战微案例 01 · 跨职能技术穿透</span>
+              <h3 style="font-size: 29px; font-weight: 800; margin-top: 12px;">1 小时看穿供应商复杂技术方案</h3>
+              <p style="font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-top: 10px;">
+                非计算机背景的业务负责人在评审技术架构前，用 AI 拆解方案中的算力瓶颈与隐藏成本，在会议上直接切中要害提出深度技术质询。
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">实战微案例 02 · 医疗合规速通（呼应课程 IBM Watson 案例）</span>
+              <h3 style="font-size: 29px; font-weight: 800; margin-top: 12px;">一下午吃透 PIPL 与 NMPA 监管要求</h3>
+              <p style="font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-top: 10px;">
+                无需苦等外部律所三周，用 AI 在两小时内梳理清《个人信息保护法》数据本地化与药监局临床证据标准，当天拿出一份合规的中国医院试点方案。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 9 页 —— 核心能力 #1：围绕目标极速吸收新知的学习者】（含 2 个点击分步）</strong></p>
+          <p>“现在我们进入第三部分：<strong>如何作为个体胜出，并进一步扩展成一支极具竞争力的团队？</strong></p>
+          <p>这归结为三大核心能力。<strong>第一项核心能力：成为一名快速学习者，熟练运用 AI 工具，围绕你的目标极速吸收相关知识。</strong></p>
+          <p><strong>【点击第 1 步】</strong> <strong>小例子 A（跨界技术穿透）：</strong> 比如你是一位没有计算机背景的业务经理，需要评估供应商提交的复杂软件架构。过去你只能盲目听从工程师；今天你可以把方案喂给 AI，让它帮你拆解潜在的性能瓶颈与成本陷阱，在评审会上直接提出直击本质的专业问题。</p>
+          <p><strong>【点击第 2 步】</strong> <strong>小例子 B（新市场与合规速通）：</strong> 就像大家课程大纲里的 IBM Watson 医疗案例[cite: 1]，假设你要在中国医院落地 AI 试点，涉及复杂的《个人信息保护法》（PIPL）数据本地化和国家药监局（NMPA）临床审批[cite: 1]。你不再需要等外部顾问调研三个星期，而是花两个小时跟 AI 深度交互，直接梳理出合规落地的核心框架。”</p>
+        </template>
+      </section>
+
+      <!-- 第 10 页：核心能力 #2：深谙 AI 替代边界的流程重构专家 -->
+      <section class="slide" data-section="第三部分 · 决胜法则" data-title="核心能力 #2：深谙 AI 替代边界的提效专家">
+        <div>
+          <div class="eyebrow amber anim-in">第三部分 · 个体生产力跃迁</div>
+          <h2 class="slide-title anim-in delay-1">
+            核心能力 #2：成为深谙 <span class="text-amber">“工作流中哪些环节可被 AI 替代”</span> 的行家
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            AI 作为生产工具在无数环节节省的时间超乎想象——把省下的巨量时间聚焦到真正高价值的思考与战略上。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <text x="80" y="65" fill="#94A3B8" font-family="Noto Sans SC" font-size="16" font-weight="700">传统工作周 · 75% 的精力被低价值手工产物制作消耗</text>
+              <g transform="translate(80, 85)">
+                <rect x="0" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="180" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="21" font-weight="600">清洗 CSV 与做表</text>
+
+                <rect x="375" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="555" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="21" font-weight="600">撰写冗长需求文档</text>
+
+                <rect x="750" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="930" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Noto Sans SC" font-size="21" font-weight="600">周报排版与画图</text>
+
+                <rect x="1125" y="0" width="395" height="95" rx="10" fill="rgba(245,158,11,0.2)" stroke="#F59E0B" stroke-width="2" />
+                <text x="1322" y="55" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="21" font-weight="700">仅剩 25% 思考与决策</text>
+              </g>
+
+              <text x="80" y="250" fill="#38BDF8" font-family="Noto Sans SC" font-size="16" font-weight="700">AI 重构后的工作周 · 将繁琐制作压缩至分钟级，释放 80% 黄金时间</text>
+              <g transform="translate(80, 270)">
+                <rect x="0" y="0" width="320" height="105" rx="12" fill="rgba(56,189,248,0.2)" stroke="#38BDF8" stroke-width="3" />
+                <text x="160" y="45" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="14" font-weight="700">⚡ AI 自动化生产流水线</text>
+                <text x="160" y="77" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="22" font-weight="800">几分钟自动生成</text>
+
+                <rect x="340" y="0" width="1180" height="105" rx="12" fill="rgba(52,211,153,0.16)" stroke="#34D399" stroke-width="3" />
+                <text x="930" y="46" text-anchor="middle" fill="#34D399" font-family="Noto Sans SC" font-size="15" font-weight="700">★ 释放出的高价值精力（转移到真正重要的战场上）</text>
+                <text x="930" y="80" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="26" font-weight="800">深度战略推演、核心客户关系、创意探索与跨界创新</text>
+              </g>
+
+              <!-- 底部两个实战案例 -->
+              <g class="step" data-step="1">
+                <rect x="80" y="405" width="740" height="115" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+                <text x="110" y="440" fill="#38BDF8" font-family="Noto Sans SC" font-size="14" font-weight="700">实战微案例 A · 经营分析周报自动化</text>
+                <text x="110" y="472" fill="#F8FAFC" font-family="Noto Sans SC" font-size="19" font-weight="700">原本耗费 2 天的导表、清洗、画图 → 缩短为 10 分钟自动流</text>
+                <text x="110" y="500" fill="#94A3B8" font-family="Noto Sans SC" font-size="16">AI 自动摄取原始数据、标记异常波动并生成高管摘要，省下两天去解决业务真问题。</text>
+              </g>
+
+              <g class="step" data-step="2">
+                <rect x="860" y="405" width="740" height="115" rx="14" fill="rgba(14,21,38,0.95)" stroke="#F59E0B" stroke-width="2" />
+                <text x="890" y="440" fill="#F59E0B" font-family="Noto Sans SC" font-size="14" font-weight="700">实战微案例 B · 用可交互原型替代冗长文档拉锯</text>
+                <text x="890" y="472" fill="#F8FAFC" font-family="Noto Sans SC" font-size="19" font-weight="700">原本 3 周写 15 页需求文档开会争论 → 30 分钟生成可点击原型</text>
+                <text x="890" y="500" fill="#94A3B8" font-family="Noto Sans SC" font-size="16">当天下午直接让真实用户体验原型、验证商业假设，极大节省研发排期成本。</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 10 页 —— 核心能力 #2：深谙工作流中哪些环节可被 AI 替代】（含 2 个点击分步）</strong></p>
+          <p>“<strong>第二项核心能力：成为一名知识丰富的行家，精准知道自己工作流程中哪些环节可以被 AI 替代，从而节省出惊人的时间。</strong></p>
+          <p>AI 作为生产工具在无数细节上能省下的时间，往往超出大多数人的想象。当你把这些时间解放出来，你就可以把精力投入到更具战略价值的领域。</p>
+          <p><strong>【点击第 1 步】</strong> <strong>小例子 A（从原始数据到业务决策）：</strong> 过去分析师每周要花整整两天导出杂乱的 CSV、在 Excel 里清洗数据、做图表、写汇报。懂得用 AI 替代流程的人，会搭建一条自动化流水线，10 分钟完成异常检测与初稿生成，把省下来的整整两天用来研究数据背后的业务增长策略。</p>
+          <p><strong>【点击第 2 步】</strong> <strong>小例子 B（用实时原型代替漫长会议）：</strong> 过去产品团队要花三周写一份 15 页的需求文档，再开无数次会争论。现在借助 AI，30 分钟就能直接生成一个可点击交互的真实原型，当天下午就能拿到客户面前验证价值。”</p>
+        </template>
+      </section>
+
+      <!-- 第 11 页：核心能力 #3：打造高竞争力团队的赋能型领导者 -->
+      <section class="slide" data-section="第三部分 · 决胜法则" data-title="核心能力 #3：赋能团队的领导者">
+        <div>
+          <div class="eyebrow emerald anim-in">第三部分 · 从优秀个体扩展为高竞争力团队</div>
+          <h2 class="slide-title anim-in delay-1">
+            核心能力 #3：成为洞察低效、发掘<span class="text-amber">“新明星员工”</span>并赋能全员的<span class="text-emerald">领导者</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            当一个人学会用 AI 省下 5 小时，优秀的领导者会让整个团队省下 50 小时，并重塑团队协作方式。
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; width: 100%; height: 600px;">
+
+            <!-- 领导力支柱 1 -->
+            <div class="card-glass cyan-edge step" data-step="1" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">领导力维度 01</span>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">俯瞰全局，揪出跨部门低效</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-top: 12px;">
+                  普通员工看单点任务，领导者看端到端系统。用 AI 管道打通部门墙，而不是盲目增加人手。
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <rect x="10" y="45" width="130" height="70" rx="10" fill="#131C31" stroke="#38BDF8" stroke-width="2" />
+                <text x="75" y="85" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="16" font-weight="600">客服通话录音</text>
+                <path d="M 145 80 L 295 80" stroke="#38BDF8" stroke-width="3" class="svg-flow" />
+                <circle cx="220" cy="80" r="26" fill="#0B1325" stroke="#38BDF8" stroke-width="2" />
+                <text x="220" y="85" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">AI</text>
+                <rect x="300" y="45" width="130" height="70" rx="10" fill="#131C31" stroke="#34D399" stroke-width="2" />
+                <text x="365" y="85" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="16" font-weight="600">销售作战卡片</text>
+              </svg>
+              <div style="font-size: 15px; color: var(--cyan); font-weight: 600;">
+                微案例：客服录音自动提炼痛点 → 实时更新销售话术库
+              </div>
+            </div>
+
+            <!-- 领导力支柱 2 -->
+            <div class="card-glass amber-edge step" data-step="2" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">领导力维度 02</span>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">重新定义并识别“新明星员工”</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-top: 12px;">
+                  过去的明星是熬夜苦干的“手工王”；AI 时代的新明星是“痛恨重复劳动、造出自动化工具并分享给全员”的创造者。
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <rect x="15" y="30" width="185" height="100" rx="10" fill="rgba(255,255,255,0.03)" stroke="#475569" stroke-dasharray="5 5" />
+                <text x="107" y="72" text-anchor="middle" fill="#64748B" font-family="Noto Sans SC" font-size="16">旧式苦劳员工</text>
+                <text x="107" y="98" text-anchor="middle" fill="#FB7185" font-family="Noto Sans SC" font-size="13">熬夜手工搬砖</text>
+
+                <rect x="230" y="20" width="195" height="120" rx="12" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="327" y="62" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="13" font-weight="700">★ AI 时代新明星</text>
+                <text x="327" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="18" font-weight="700">工作流改造者</text>
+                <text x="327" y="118" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="13">4 小时 → 3 分钟</text>
+              </svg>
+              <div style="font-size: 15px; color: var(--amber); font-weight: 600;">
+                微案例：重奖把 4 小时脏活变成 3 分钟脚本的员工
+              </div>
+            </div>
+
+            <!-- 领导力支柱 3 -->
+            <div class="card-glass emerald-edge step" data-step="3" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald);">领导力维度 03</span>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">教练式辅导与组织影响力</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-top: 12px;">
+                  消除员工对自动化的恐惧，通过高频分享机制，带动身边所有人变得更高产、更紧密协作。
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <circle cx="220" cy="80" r="30" fill="rgba(52,211,153,0.25)" stroke="#34D399" stroke-width="2.5" class="svg-pulse" />
+                <text x="220" y="85" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="14" font-weight="700">1 人突破</text>
+                <g stroke="#34D399" stroke-width="2">
+                  <line x1="190" y1="80" x2="90" y2="40" /><line x1="190" y1="80" x2="90" y2="120" />
+                  <line x1="250" y1="80" x2="350" y2="40" /><line x1="250" y1="80" x2="350" y2="120" />
+                </g>
+                <circle cx="80" cy="35" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="80" cy="125" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="360" cy="35" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="360" cy="125" r="16" fill="#131C31" stroke="#34D399" />
+              </svg>
+              <div style="font-size: 15px; color: var(--emerald); font-weight: 600;">
+                微案例：每周五 15 分钟“AI 提效拆解秀”，全员复用
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 11 页 —— 核心能力 #3：赋能型领导者】（含 3 个点击分步）</strong></p>
+          <p>“<strong>第三项核心能力：成为一名能够俯瞰低效环节、识别‘新明星员工（New Rock Stars）’，并辅导和影响身边人变得更高产、更协作的领导者。</strong></p>
+          <p><strong>【点击第 1 步】</strong> <strong>1. 洞察系统性低效：</strong> 比如你发现销售团队每天花几个小时改 PPT，而产品团队每天花几个小时听客服录音。作为领导者，你用 AI 把两条流水线打通，让客户录音自动生成实时更新的销售作战卡片。</p>
+          <p><strong>【点击第 2 步】</strong> <strong>2. 识别‘新明星员工’：</strong> 过去我们夸奖加班到半夜手工改表的员工；但在 AI 时代，真正的明星员工是那个说<em>‘我受够了这个耗费 4 小时的重复工作，所以我周二早上搭了个 AI 工作流，3 分钟就能跑完，而且我已经分享给全组了’</em>的人。你要识别并重用这样的人。</p>
+          <p><strong>【点击第 3 步】</strong> <strong>3. 辅导与影响团队文化：</strong> 比如每周五举办 15 分钟的‘AI 实战分享会’，让一位同事演示他本周用 AI 砍掉的一个繁琐任务，把提示词和工具链直接同步给所有人。”</p>
+        </template>
+      </section>
+
+      <!-- 第 12 页：总结篇 —— 登月思想实验（造一枚火箭送入轨道） -->
+      <section class="slide" data-section="总结篇 · 思想实验" data-title="登月挑战：制造并发射一枚入轨火箭">
+        <div>
+          <div class="eyebrow amber anim-in">留给全场听众的开放式思想挑战</div>
+          <h2 class="slide-title anim-in delay-1">
+            登月级假想挑战：制造并发射一枚 <span class="text-cyan">进入地球轨道的火箭</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            假设<strong style="color: var(--amber);">资金完全不是问题</strong>，而你并非航天科班出身——要实现这个目标需要什么？高阶步骤是什么？
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- 左侧：入轨火箭蓝图 SVG -->
+          <div class="visual-box anim-in delay-2" style="flex: 0.9; height: 610px; background: radial-gradient(circle at 50% 30%, rgba(56,189,248,0.14), rgba(8,12,24,0.9));">
+            <svg viewBox="0 0 680 560">
+              <circle cx="340" cy="260" r="210" fill="none" stroke="rgba(56,189,248,0.18)" stroke-width="1.5" stroke-dasharray="8 8" class="svg-flow" />
+              <circle cx="340" cy="260" r="150" fill="none" stroke="rgba(245,158,11,0.18)" stroke-width="1.5" />
+
+              <g class="svg-float">
+                <path d="M 340 45 C 390 110, 395 165, 395 190 L 285 190 C 285 165, 290 110, 340 45 Z" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="3" />
+                <rect x="285" y="190" width="110" height="55" fill="rgba(129,140,248,0.2)" stroke="#818CF8" stroke-width="3" />
+                <text x="340" y="223" text-anchor="middle" fill="#F8FAFC" font-family="Noto Sans SC" font-size="14" font-weight="700">航电与制导</text>
+                <rect x="285" y="245" width="110" height="150" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="3" />
+                <text x="340" y="325" text-anchor="middle" fill="#F59E0B" font-family="Noto Sans SC" font-size="14" font-weight="700">推进与燃料</text>
+                <polygon points="285,335 235,415 285,395" fill="rgba(56,189,248,0.25)" stroke="#38BDF8" stroke-width="2.5" />
+                <polygon points="395,335 445,415 395,395" fill="rgba(56,189,248,0.25)" stroke="#38BDF8" stroke-width="2.5" />
+                <polygon points="300,395 285,435 330,435 325,395" fill="#F59E0B" />
+                <polygon points="355,395 350,435 395,435 380,395" fill="#F59E0B" />
+                <path d="M 305 440 Q 340 535 375 440" fill="rgba(251,113,133,0.45)" stroke="#F59E0B" stroke-width="3" class="svg-pulse" />
+              </g>
+
+              <text x="340" y="535" text-anchor="middle" fill="#38BDF8" font-family="Noto Sans SC" font-size="15" font-weight="700">资金预算：无上限 · 核心挑战：认知拆解、AI 仿真与团队组建</text>
+            </svg>
+          </div>
+
+          <!-- 右侧：三大高阶步骤 -->
+          <div class="col-left" style="flex: 1.1; gap: 20px;">
+            <div class="card-glass cyan-edge step" data-step="1" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">高阶步骤 01 · “现用现学”第一性原理拆解</span>
+              <h3 style="font-size: 27px; font-weight: 800; margin-top: 8px;">用 AI 拆解火箭全系统工程树</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 6px;">
+                无需先读 8 年航天博士。用 AI 将入轨目标拆解为推进系统、特种材料、飞控软件、热防护与发射牌照，在每一个决策节点按需深挖物理与工程边界。
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">高阶步骤 02 · AI 作为虚拟生产与物理仿真引擎</span>
+              <h3 style="font-size: 27px; font-weight: 800; margin-top: 8px;">生成飞控代码、3D 结构与万次流体仿真</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 6px;">
+                在切割第一块金属前，用生成式 AI 与物理 AI（Physical AI）生成飞控代码与喷管几何结构，并在虚拟空间运行上万次燃烧流体力学与轨道仿真。
+              </p>
+            </div>
+
+            <div class="card-glass emerald-edge step" data-step="3" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald);">高阶步骤 03 · 组建精锐跨界团队与生态整合</span>
+              <h3 style="font-size: 27px; font-weight: 800; margin-top: 8px;">招募具备“细节审美”的全栈整合者</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 6px;">
+                无需雇佣五千名传统螺丝钉工程师；用充裕资金招募几十位懂行、能鉴别 AI 方案真伪（90 分 vs 100 分）的顶尖多面手，整合全球供应链快速迭代试射。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 12 页 —— 假想挑战：制造并发射一枚入轨火箭】（含 3 个点击分步）</strong></p>
+          <p>“刚才我们聊了怎么造一张木桌。在进入总结之前，我想把这个思考实验升级为一个<strong>‘登月计划（Moonshot Project）’</strong>：<strong>制造并发射一枚进入地球轨道的火箭。</strong></p>
+          <p>这是一个留给大家思考的开放式问题：<strong>假设资金完全不是问题，为了实现这个目标，究竟需要什么？高阶步骤有哪些？</strong></p>
+          <p><strong>【点击第 1 步】</strong> <strong>第一步：用‘现用现学（Pay-As-You-Go）’进行第一性原理拆解。</strong> 你不需要先花八年去读航空航天博士，而是用 AI 把火箭拆解为推进剂、材料力学、航电飞控、热防护和轨道审批等模块，边推进边吸收核心物理与工程折中。</p>
+          <p><strong>【点击第 2 步】</strong> <strong>第二步：把 AI 作为核心生产与仿真引擎。</strong> 在制造硬件之前，用 AI 生成飞控代码、CAD 图纸，并进行成千上万次物理与流体力学模拟。</p>
+          <p><strong>【点击第 3 步】</strong> <strong>第三步：组建并领导一支高竞争力团队。</strong> 在资金充裕且 AI 承担了绝大部分计算与设计产物的前提下，你真正需要招募的是具备行业深度嗅觉（Sense）、能把控细节并打通上下游硬件供应链的‘多面手’专家。”</p>
+        </template>
+      </section>
+
+      <!-- 第 13 页：幕后花絮 —— 我是怎样准备这个 Presentation 的 -->
+      <section class="slide" data-section="幕后花絮 · 人机协作" data-title="我是怎样准备这个 Presentation 的">
+        <div>
+          <div class="eyebrow emerald anim-in">幕后花絮 · 一次真实的人机协作</div>
+          <h2 class="slide-title anim-in delay-1">
+            我是怎样准备这个 <span class="text-emerald">Presentation</span> 的？
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            今天这份演讲本身，就是“现用现学”与“AI 作为生产工具”的一次实践：<strong style="color: var(--amber);">我负责方向与骨架，AI 负责血肉与修饰。</strong>
+          </p>
+        </div>
+
+        <div class="stage-body" style="flex-direction: column; align-items: stretch; gap: 26px;">
+          <!-- 四步流程 -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; flex: 1;">
+
+            <div class="card-glass cyan-edge step" data-step="1" style="padding: 26px 28px; display: flex; flex-direction: column;">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan); align-self: flex-start;">STEP 01 · AI 辅助</span>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">导入课程，读懂大纲</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.65; margin-top: 14px;">
+                先把 Tina 老师的上课内容导入 AI，快速了解整门课程的大纲与已讲过的知识脉络。
+              </p>
+              <div style="margin-top: auto; font-family: 'Space Grotesk'; font-size: 110px; font-weight: 700; line-height: 1; color: rgba(56,189,248,0.18); text-align: right;">01</div>
+            </div>
+
+            <div class="card-glass cyan-edge step" data-step="2" style="padding: 26px 28px; display: flex; flex-direction: column;">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan); align-self: flex-start;">STEP 02 · AI 辅助</span>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">让 AI 推荐补充角度</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.65; margin-top: 14px;">
+                让 AI 基于课程内容，推荐我可以补充的知识角度，以及合适的讲解深度。
+              </p>
+              <div style="margin-top: auto; font-family: 'Space Grotesk'; font-size: 110px; font-weight: 700; line-height: 1; color: rgba(56,189,248,0.18); text-align: right;">02</div>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="3" style="padding: 26px 28px; display: flex; flex-direction: column;">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber); align-self: flex-start;">STEP 03 · 我亲自完成</span>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">写出文字大纲</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px; font-size: 19px; font-weight: 600;">
+                <div style="padding: 9px 14px; border-radius: 8px; background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35);">① 开场介绍</div>
+                <div style="padding: 9px 14px; border-radius: 8px; background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35);">② AI 改变的学习方式</div>
+                <div style="padding: 9px 14px; border-radius: 8px; background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35);">③ AI 作为生产工具</div>
+                <div style="padding: 9px 14px; border-radius: 8px; background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35);">④ 个人需具备的技能与改变</div>
+                <div style="padding: 9px 14px; border-radius: 8px; background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35);">⑤ 团队层面与举例</div>
+              </div>
+              <div style="margin-top: auto; font-family: 'Space Grotesk'; font-size: 110px; font-weight: 700; line-height: 1; color: rgba(245,158,11,0.18); text-align: right;">03</div>
+            </div>
+
+            <div class="card-glass emerald-edge step" data-step="4" style="padding: 26px 28px; display: flex; flex-direction: column;">
+              <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald); align-self: flex-start;">STEP 04 · AI 生产</span>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 16px;">其余全部交给 AI 填充</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.65; margin-top: 14px;">
+                在大纲骨架之上，剩下的内容全部由 AI 填充——包括大量的案例、文字的润色修饰，乃至你们现在看到的这套幻灯片。
+              </p>
+              <div style="margin-top: auto; font-family: 'Space Grotesk'; font-size: 110px; font-weight: 700; line-height: 1; color: rgba(52,211,153,0.18); text-align: right;">04</div>
+            </div>
+          </div>
+
+          <!-- 底部分工条 -->
+          <div class="card-glass anim-in delay-3" style="padding: 20px 30px; display: flex; align-items: center; gap: 28px;">
+            <div style="font-family: 'JetBrains Mono', 'Noto Sans SC'; font-size: 15px; color: var(--text-muted); font-weight: 700; white-space: nowrap;">人机分工</div>
+            <div style="flex: 1; display: flex; height: 46px; border-radius: 10px; overflow: hidden; font-size: 17px; font-weight: 700;">
+              <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: rgba(245,158,11,0.22); color: var(--amber); border-right: 2px solid #060911;">
+                我：定目标 · 搭骨架 · 做判断
+              </div>
+              <div style="flex: 2.2; display: flex; align-items: center; justify-content: center; background: rgba(56,189,248,0.16); color: var(--cyan);">
+                AI：读资料 · 给建议 · 填案例 · 修文字 · 做幻灯片
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 13 页 —— 幕后花絮：我是怎样准备这个 Presentation 的】（含 4 个点击分步）</strong></p>
+          <p>“在总结之前，我想跟大家分享一个小小的幕后花絮：<strong>今天这份演讲，我自己是怎么准备的？</strong></p>
+          <p><strong>【点击第 1 步】</strong> 第一步，我先把 Tina 老师的上课内容导入 AI，让它帮我快速了解这门课的大纲，知道大家已经学过什么。</p>
+          <p><strong>【点击第 2 步】</strong> 第二步，我让 AI 基于课程内容，推荐我可以从哪些角度补充知识，以及讲到什么深度比较合适。</p>
+          <p><strong>【点击第 3 步】</strong> 第三步，是我自己亲手完成的：写出一个大致的文字大纲——开头先做介绍，然后讲 AI 改变的学习方式，再到 AI 作为生产工具，接着讲个人层面需要具备的技能和做出的改变，最后讲团队以及举例。</p>
+          <p><strong>【点击第 4 步】</strong> 第四步，剩下的全部由 AI 填充，包括很多例子和文字的修饰。</p>
+          <p>所以大家可以看到，这本身就是今天所讲内容的一个缩影：<strong>方向和骨架由人来定，血肉和修饰交给 AI。</strong>”</p>
+        </template>
+      </section>
+
+      <!-- 第 14 页：核心要点极简总结 -->
+      <section class="slide" data-section="总结篇 · 核心要点" data-title="总结：决胜 AI 时代的四大法则">
+        <div>
+          <div class="eyebrow anim-in">全篇核心总结</div>
+          <h2 class="slide-title anim-in delay-1">
+            今日回顾：决胜 <span class="text-cyan">AI 时代</span> 的四个关键要点
+          </h2>
+        </div>
+
+        <div class="stage-body">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; width: 100%; height: 620px;" class="anim-in delay-2">
+
+            <!-- 要点 1 -->
+            <div class="card-glass cyan-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(56,189,248,0.12)" stroke="#38BDF8" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#38BDF8" font-family="Space Grotesk" font-size="34" font-weight="700">01</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--cyan); font-weight: 700;">学习方式进化</div>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 6px;">拥抱“现用现学 (Pay-As-You-Go)”</h3>
+                <p style="font-size: 19px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+                  告别长达数年的前置理论死记硬背；在动手创造中按需调取 AI 的无限广度与深度，快速迭代成为专家。
+                </p>
+              </div>
+            </div>
+
+            <!-- 要点 2 -->
+            <div class="card-glass amber-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(245,158,11,0.12)" stroke="#F59E0B" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#F59E0B" font-family="Space Grotesk" font-size="34" font-weight="700">02</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--amber); font-weight: 700;">生产工具革命</div>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 6px;">告别“算盘技能”，用好 AI 生产器</h3>
+                <p style="font-size: 19px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+                  把表格、PPT、文档和代码交给 AI；支付 Token 成本与学习新范式的沉没成本，解锁全新的可能性边界。
+                </p>
+              </div>
+            </div>
+
+            <!-- 要点 3 -->
+            <div class="card-glass cyan-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(129,140,248,0.15)" stroke="#818CF8" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#818CF8" font-family="Space Grotesk" font-size="34" font-weight="700">03</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--indigo); font-weight: 700;">个体胜出之道</div>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 6px;">卸载旧包袱，打通垂直全链路</h3>
+                <p style="font-size: 19px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+                  保留你对细节和产品质感的把控力，用 AI 替代重复环节，把释放出的时间用于成长为跨上下游的“多面手”。
+                </p>
+              </div>
+            </div>
+
+            <!-- 要点 4 -->
+            <div class="card-glass emerald-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(52,211,153,0.15)" stroke="#34D399" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#34D399" font-family="Space Grotesk" font-size="34" font-weight="700">04</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--emerald); font-weight: 700;">团队决胜法则</div>
+                <h3 style="font-size: 30px; font-weight: 800; margin-top: 6px;">消除系统低效，赋能“新明星”</h3>
+                <p style="font-size: 19px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+                  俯瞰并打通跨团队低效流程，发掘并重用主动用 AI 改造工作流的“新明星员工”，带动全员高效协作。
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 14 页 —— 总结：今天聊的核心要点】</strong></p>
+          <p>“最后，我们用极简的四句话总结今天分享的核心内容：</p>
+          <p>1. <strong>进化学习方式：</strong> 开启‘现用现学（Pay-As-You-Go）’模式，在创造中按需汲取知识，突破认知天花板。</p>
+          <p>2. <strong>重塑生产方式：</strong> 放下旧时代的‘打算盘式技能’，不论你是免费获得全套白领生产能力，还是主动卸载旧习惯，都要全面拥抱 AI 生产引擎。</p>
+          <p>3. <strong>个人跨界破局：</strong> 用 AI 替换工作流中的繁琐环节，带着你的行业直觉走出单一舒适区，打通垂直领域的上下游全链路。</p>
+          <p>4. <strong>领导团队胜出：</strong> 洞察系统性低效，发掘善于用 AI 消灭重复劳动的‘新明星员工’，辅导并影响身边每一个人共同提效。”</p>
+        </template>
+      </section>
+
+      <!-- 第 15 页：Q&A 问答与互动交流 -->
+      <section class="slide" data-section="问答互动" data-title="Q&A 问答与开放讨论">
+        <div class="stage-body" style="flex-direction: column; justify-content: center; text-align: center; gap: 36px;">
+          <div class="eyebrow amber anim-in" style="margin: 0 auto;">OPEN FLOOR · 互动交流时间</div>
+          <h1 class="hero-title anim-in delay-1" style="font-size: 92px;">
+            Q&amp;A · <span class="serif-accent text-cyan">提问与交流</span>
+          </h1>
+          <p class="subtitle anim-in delay-2" style="margin: 0 auto; max-width: 960px;">
+            感谢各位的聆听！欢迎就今天的任何内容提问，或者聊聊以下两个开放话题：
+          </p>
+
+          <div style="display: flex; gap: 36px; width: 100%; max-width: 1480px; margin-top: 16px;" class="anim-in delay-3">
+            <div class="card-glass cyan-edge" style="flex: 1; text-align: left; padding: 38px;">
+              <div style="font-family: 'JetBrains Mono'; font-size: 15px; color: var(--cyan); font-weight: 700;">互动话题 01 · 人机边界</div>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 14px; line-height: 1.3;">
+                你会给自己定下哪些<span class="text-cyan">“不交给 AI”</span>的底线？
+              </h3>
+              <p style="font-size: 19px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
+                当越来越多的思考与产出交给 AI，你最担心自己哪项能力会退化？你会如何刻意保留独立判断与深度思考？
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge" style="flex: 1; text-align: left; padding: 38px;">
+              <div style="font-family: 'JetBrains Mono'; font-size: 15px; color: var(--amber); font-weight: 700;">互动话题 02 · 你的行业实战</div>
+              <h3 style="font-size: 30px; font-weight: 800; margin-top: 14px; line-height: 1.3;">
+                你所在行业里，下一个消失的<span class="text-amber">“打算盘技能”</span>是什么？
+              </h3>
+              <p style="font-size: 19px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
+                在你目前的工作流程中，哪一项耗时耗力的手工产物最值得立刻用 AI 替换掉？
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>【第 15 页 —— Q&amp;A 问答与互动】</strong></p>
+          <p>“以上就是我今天分享的全部内容，非常感谢大家的时间与专注！</p>
+          <p>接下来的时间完全交给各位。大家可以针对刚才讲到的任何内容提问，也可以聊聊：当越来越多的思考和产出交给 AI，你最担心自己哪项能力会退化、你会给自己定下哪些‘不交给 AI’的底线；或者聊聊你所在的行业里哪项‘算盘技能’最先被 AI 取代。哪位同学想先来开个头？”</p>
+        </template>
+      </section>
+
+    </div>
+
+    <!-- 演讲者提词器抽屉 -->
+    <div id="notes-drawer">
+      <div class="notes-header">
+        <span>演讲者逐字稿与分步提示（按 'N' 键隐藏）</span>
+        <span id="notes-slide-indicator">第 01 / 15 页</span>
+      </div>
+      <div id="notes-content"></div>
+    </div>
+
+    <!-- 底部导航控制栏 -->
+    <div class="bottom-hud" onclick="event.stopPropagation();">
+      <div class="hud-left">
+        <span id="slide-counter" style="font-weight: 700; color: var(--text-main); min-width: 78px;">01 / 15</span>
+        <div class="progress-track">
+          <div id="progress-fill"></div>
+        </div>
+        <div class="step-dots" id="step-dots" title="当前页点击分步动画进度"></div>
+      </div>
+      <div class="hud-right">
+        <button class="kbd-btn" id="btn-prev" title="上一步 / 上一页 (左方向键)">← 上一步</button>
+        <button class="kbd-btn" id="btn-next" title="下一步 / 下一页 (右方向键 / 空格)">下一步 →</button>
+        <button class="kbd-btn" id="btn-notes" title="显示/隐藏演讲稿 (N)">N · 演讲稿</button>
+        <button class="kbd-btn" id="btn-fullscreen" title="切换全屏 (F)">F · 全屏</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    const stage = document.getElementById('stage');
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const totalSlides = slides.length;
+    const slideCounter = document.getElementById('slide-counter');
+    const progressFill = document.getElementById('progress-fill');
+    const stepDotsContainer = document.getElementById('step-dots');
+    const hudSection = document.getElementById('hud-section');
+    const hudTopic = document.getElementById('hud-topic');
+    const notesDrawer = document.getElementById('notes-drawer');
+    const notesContent = document.getElementById('notes-content');
+    const notesSlideIndicator = document.getElementById('notes-slide-indicator');
+
+    let currentIndex = 0;
+
+    // 1. 自适应缩放 1920x1080 舞台
+    function updateScale() {
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
+      const scale = Math.min(scaleX, scaleY);
+      document.documentElement.style.setProperty('--scale', scale);
+    }
+    window.addEventListener('resize', updateScale);
+    updateScale();
+
+    // 2. 获取当前幻灯片的分步元素
+    function getSlideSteps(slideEl) {
+      return Array.from(slideEl.querySelectorAll('.step'));
+    }
+
+    // 3. 切换幻灯片并同步 URL Hash、演讲稿与进度条
+    function goToSlide(index, revealAllSteps = false) {
+      if (index < 0 || index >= totalSlides) return;
+      currentIndex = index;
+
+      slides.forEach((s, idx) => {
+        const isActive = idx === currentIndex;
+        s.classList.toggle('active', isActive);
+        if (isActive) {
+          const steps = getSlideSteps(s);
+          steps.forEach(stepEl => {
+            stepEl.classList.toggle('visible', revealAllSteps);
+          });
+        }
+      });
+
+      const activeSlide = slides[currentIndex];
+      const numStr = String(currentIndex + 1).padStart(2, '0');
+      const totalStr = String(totalSlides).padStart(2, '0');
+      slideCounter.textContent = `${numStr} / ${totalStr}`;
+      notesSlideIndicator.textContent = `第 ${numStr} / ${totalStr} 页`;
+      progressFill.style.width = `${((currentIndex + 1) / totalSlides) * 100}%`;
+
+      hudSection.textContent = activeSlide.dataset.section || '主题演讲';
+      hudTopic.textContent = activeSlide.dataset.title || '';
+
+      const template = activeSlide.querySelector('template.speaker-notes');
+      notesContent.innerHTML = template ? template.innerHTML : '<p>本页无备注。</p>';
+
+      if (window.location.hash !== `#${currentIndex + 1}`) {
+        history.replaceState(null, null, `#${currentIndex + 1}`);
+      }
+
+      renderStepDots();
+    }
+
+    function renderStepDots() {
+      const activeSlide = slides[currentIndex];
+      const steps = getSlideSteps(activeSlide);
+      stepDotsContainer.innerHTML = '';
+      steps.forEach((stepEl, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'step-dot' + (stepEl.classList.contains('visible') ? ' active' : '');
+        dot.title = `第 ${i + 1} 步`;
+        stepDotsContainer.appendChild(dot);
+      });
+    }
+
+    // 4. 下一步 / 下一页
+    function next() {
+      const activeSlide = slides[currentIndex];
+      const hiddenSteps = getSlideSteps(activeSlide).filter(s => !s.classList.contains('visible'));
+      if (hiddenSteps.length > 0) {
+        hiddenSteps[0].classList.add('visible');
+        renderStepDots();
+      } else if (currentIndex < totalSlides - 1) {
+        goToSlide(currentIndex + 1, false);
+      }
+    }
+
+    // 5. 上一步 / 上一页
+    function prev() {
+      const activeSlide = slides[currentIndex];
+      const visibleSteps = getSlideSteps(activeSlide).filter(s => s.classList.contains('visible'));
+      if (visibleSteps.length > 0) {
+        visibleSteps[visibleSteps.length - 1].classList.remove('visible');
+        renderStepDots();
+      } else if (currentIndex > 0) {
+        goToSlide(currentIndex - 1, true);
+      }
+    }
+
+    // 6. 全屏切换
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // 7. 演讲稿抽屉开关
+    function toggleNotes() {
+      notesDrawer.classList.toggle('open');
+    }
+
+    document.getElementById('btn-next').addEventListener('click', next);
+    document.getElementById('btn-prev').addEventListener('click', prev);
+    document.getElementById('btn-notes').addEventListener('click', toggleNotes);
+    document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    stage.addEventListener('click', (e) => {
+      if (notesDrawer.contains(e.target)) return;
+      next();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        getSlideSteps(slides[currentIndex]).forEach(s => s.classList.add('visible'));
+        renderStepDots();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        toggleNotes();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    function syncFromHash() {
+      const hashNum = parseInt(window.location.hash.replace('#', ''), 10);
+      if (!isNaN(hashNum) && hashNum >= 1 && hashNum <= totalSlides) {
+        goToSlide(hashNum - 1, false);
+      } else {
+        goToSlide(0, false);
+      }
+    }
+    window.addEventListener('hashchange', syncFromHash);
+    syncFromHash();
+
+    // 8. 背景神经网络粒子连线动画
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    const nodes = Array.from({ length: 38 }, () => ({
+      x: Math.random() * 1920,
+      y: Math.random() * 1080,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 2 + 1
+    }));
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, 1920, 1080);
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > 1920) n.vx *= -1;
+        if (n.y < 0 || n.y > 1080) n.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.fill();
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const m = nodes[j];
+          const dx = n.x - m.x;
+          const dy = n.y - m.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 220) {
+            ctx.beginPath();
+            ctx.moveTo(n.x, n.y);
+            ctx.lineTo(m.x, m.y);
+            ctx.strokeStyle = `rgba(56, 189, 248, ${(1 - dist / 220) * 0.12})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animateCanvas);
+    }
+    animateCanvas();
+  })();
+</script>
+</body>
+</html>
