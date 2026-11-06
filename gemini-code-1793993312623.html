@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Winning in the AI Era — How We Learn, Build, and Lead</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #060911;
+    --bg-panel: rgba(14, 21, 38, 0.76);
+    --bg-glass: rgba(20, 30, 52, 0.55);
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-cyan: rgba(56, 189, 248, 0.45);
+    --border-amber: rgba(245, 158, 11, 0.45);
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --text-dim: #64748B;
+    --cyan: #38BDF8;
+    --cyan-glow: rgba(56, 189, 248, 0.25);
+    --indigo: #818CF8;
+    --amber: #F59E0B;
+    --amber-glow: rgba(245, 158, 11, 0.25);
+    --rose: #FB7185;
+    --emerald: #34D399;
+    --scale: 1;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #030509;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 16:9 Fixed 1920x1080 Stage */
+  #viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #stage {
+    position: absolute;
+    width: 1920px;
+    height: 1080px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--scale));
+    transform-origin: center center;
+    background: radial-gradient(circle at 80% 15%, rgba(56, 189, 248, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 18% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+                var(--bg-deep);
+    overflow: hidden;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+  }
+
+  /* Architectural Blueprint Grid Overlay */
+  .blueprint-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.65;
+  }
+
+  /* Top Architectural Telemetry Header */
+  .top-bar {
+    position: absolute;
+    top: 36px;
+    left: 72px;
+    right: 72px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 20;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 14px;
+    pointer-events: none;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .section-pill {
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid var(--border-cyan);
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  .top-bar-right {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* Slides Container */
+  .slides-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 110px 72px 92px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(24px) scale(0.99);
+    transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Staggered Entrance Animations on Active Slide */
+  .slide.active .anim-in {
+    animation: fadeSlideUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .anim-in {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  .delay-1 { animation-delay: 0.08s !important; }
+  .delay-2 { animation-delay: 0.18s !important; }
+  .delay-3 { animation-delay: 0.28s !important; }
+  .delay-4 { animation-delay: 0.38s !important; }
+
+  @keyframes fadeSlideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Click-to-Reveal Steps */
+  .step {
+    opacity: 0.12;
+    filter: blur(2px);
+    transform: translateY(12px);
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .step.visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+
+  /* Typography System */
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eyebrow.amber { color: var(--amber); }
+  .eyebrow.emerald { color: var(--emerald); }
+  .eyebrow.rose { color: var(--rose); }
+
+  h1.hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 86px;
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+  }
+
+  h2.slide-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--text-main);
+    max-width: 1500px;
+  }
+
+  .serif-italic {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .text-cyan { color: var(--cyan); }
+  .text-amber { color: var(--amber); }
+  .text-emerald { color: var(--emerald); }
+  .text-rose { color: var(--rose); }
+  .text-indigo { color: var(--indigo); }
+
+  .subtitle {
+    font-size: 25px;
+    line-height: 1.45;
+    color: var(--text-muted);
+    max-width: 1180px;
+    margin-top: 10px;
+  }
+
+  /* Layout Grids */
+  .stage-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 44px;
+    margin-top: 24px;
+    position: relative;
+  }
+
+  .col-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .col-right {
+    flex: 1.15;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-glass {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 32px 36px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-glass.cyan-edge {
+    border-color: var(--border-cyan);
+    box-shadow: 0 16px 48px rgba(56, 189, 248, 0.1);
+  }
+
+  .card-glass.amber-edge {
+    border-color: var(--border-amber);
+    box-shadow: 0 16px 48px rgba(245, 158, 11, 0.1);
+  }
+
+  .card-glass.emerald-edge {
+    border-color: rgba(52, 211, 153, 0.45);
+    box-shadow: 0 16px 48px rgba(52, 211, 153, 0.1);
+  }
+
+  .metric-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* SVG Visual Containers */
+  .visual-box {
+    width: 100%;
+    height: 640px;
+    background: rgba(10, 15, 28, 0.65);
+    border: 1px solid var(--border-subtle);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 24px;
+  }
+
+  .visual-box svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Animated SVG Keyframes */
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.04); }
+  }
+
+  @keyframes dashFlow {
+    to { stroke-dashoffset: -120; }
+  }
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .svg-flow {
+    stroke-dasharray: 10 8;
+    animation: dashFlow 4s linear infinite;
+  }
+
+  .svg-float {
+    animation: floatSlow 5s ease-in-out infinite;
+  }
+
+  .svg-pulse {
+    transform-origin: center;
+    animation: pulseGlow 3.2s ease-in-out infinite;
+  }
+
+  /* Bottom HUD Navigation Bar */
+  .bottom-hud {
+    position: absolute;
+    bottom: 26px;
+    left: 72px;
+    right: 72px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .hud-left, .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .progress-track {
+    width: 240px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    width: 7%;
+    background: linear-gradient(90deg, var(--cyan), var(--amber));
+    transition: width 0.35s ease;
+  }
+
+  .step-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    transition: all 0.25s ease;
+  }
+
+  .step-dot.active {
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--amber);
+    transform: scale(1.2);
+  }
+
+  .kbd-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .kbd-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--cyan);
+    color: var(--text-main);
+  }
+
+  /* Speaker Notes Drawer (Toggled with N) */
+  #notes-drawer {
+    position: absolute;
+    bottom: 84px;
+    right: 72px;
+    width: 760px;
+    max-height: 460px;
+    background: rgba(8, 13, 26, 0.96);
+    border: 1px solid var(--border-cyan);
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85);
+    z-index: 100;
+    padding: 26px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transform: translateY(30px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    backdrop-filter: blur(20px);
+    cursor: auto;
+  }
+
+  #notes-drawer.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  #notes-content {
+    font-size: 19px;
+    line-height: 1.65;
+    color: #E2E8F0;
+    overflow-y: auto;
+    padding-right: 8px;
+    user-select: text;
+  }
+
+  #notes-content p {
+    margin-bottom: 14px;
+  }
+
+  #notes-content strong {
+    color: var(--amber);
+  }
+
+  /* Custom Scrollbar for Notes */
+  #notes-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  #notes-content::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div class="blueprint-grid"></div>
+    <canvas id="bg-canvas" width="1920" height="1080"></canvas>
+
+    <!-- Top Telemetry Bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="section-pill" id="hud-section">OPENING</span>
+        <span id="hud-topic">MBAO 5580 · AI FOR BUSINESS STRATEGY & COMPETITIVE ADVANTAGE</span>
+      </div>
+      <div class="top-bar-right">
+        DOMINICAN UNIVERSITY OF CALIFORNIA · GUEST LECTURE
+      </div>
+    </div>
+
+    <!-- =====================================================
+         15 SLIDES
+    ====================================================== -->
+    <div class="slides-wrapper">
+
+      <!-- SLIDE 1: TITLE & PERSONAL INTRODUCTION -->
+      <section class="slide active" data-section="OPENING" data-title="Title & Introduction">
+        <div class="stage-body">
+          <div class="col-left" style="flex: 1.15;">
+            <div class="eyebrow anim-in">GUEST KEYNOTE</div>
+            <h1 class="hero-title anim-in delay-1">
+              How to <span class="text-cyan">Win</span> in the <span class="serif-italic text-amber">AI Era</span>
+            </h1>
+            <p class="subtitle anim-in delay-2" style="font-size: 28px; max-width: 880px;">
+              What roles AI will fulfill in how we learn and produce—and what human capabilities will shine when AI becomes the baseline norm.
+            </p>
+            <div class="card-glass cyan-edge anim-in delay-3" style="margin-top: 22px; max-width: 780px; display: flex; align-items: center; gap: 28px;">
+              <div style="width: 74px; height: 74px; border-radius: 16px; background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(245,158,11,0.25)); border: 1px solid var(--cyan); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk'; font-size: 30px; font-weight: 700; color: var(--text-main);">
+                QW
+              </div>
+              <div>
+                <div style="font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; color: var(--text-main);">
+                  Zoro Wu
+                </div>
+                <div style="font-size: 19px; color: var(--cyan); margin-top: 4px; font-weight: 500;">
+                  Engineering Manager · 16 Years in Software Engineering & Tech Leadership
+                </div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--text-muted); margin-top: 6px;">
+                  SILICON VALLEY → BAROWSKY SCHOOL OF BUSINESS (MBAO 5580)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-right" style="flex: 0.95;">
+            <div class="visual-box anim-in delay-2" style="background: radial-gradient(circle at center, rgba(56,189,248,0.12), rgba(10,15,28,0.85));">
+              <svg viewBox="0 0 700 600">
+                <defs>
+                  <linearGradient id="gradCyan" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#38BDF8" />
+                    <stop offset="100%" stop-color="#818CF8" />
+                  </linearGradient>
+                  <linearGradient id="gradAmber" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#F59E0B" />
+                    <stop offset="100%" stop-color="#FB7185" />
+                  </linearGradient>
+                </defs>
+                <!-- Outer Orbital Rings -->
+                <circle cx="350" cy="300" r="240" fill="none" stroke="rgba(56,189,248,0.18)" stroke-width="1.5" stroke-dasharray="8 8" class="svg-flow" />
+                <circle cx="350" cy="300" r="185" fill="none" stroke="rgba(245,158,11,0.22)" stroke-width="1.5" />
+                <!-- Left Hemisphere: Algorithmic Speed (Cyan) -->
+                <path d="M 350 90 A 210 210 0 0 0 350 510 Z" fill="rgba(56,189,248,0.08)" stroke="url(#gradCyan)" stroke-width="3" />
+                <!-- Right Hemisphere: Human Judgment & Vision (Amber) -->
+                <path d="M 350 90 A 210 210 0 0 1 350 510 Z" fill="rgba(245,158,11,0.08)" stroke="url(#gradAmber)" stroke-width="3" />
+                <!-- Geometric Lattice on Left -->
+                <g stroke="#38BDF8" stroke-width="1.5" opacity="0.7">
+                  <line x1="350" y1="150" x2="210" y2="220" />
+                  <line x1="210" y1="220" x2="190" y2="330" />
+                  <line x1="190" y1="330" x2="350" y2="440" />
+                  <line x1="210" y1="220" x2="280" y2="300" />
+                  <line x1="190" y1="330" x2="280" y2="300" />
+                  <line x1="280" y1="300" x2="350" y2="300" />
+                </g>
+                <circle cx="210" cy="220" r="7" fill="#38BDF8" class="svg-pulse" />
+                <circle cx="190" cy="330" r="7" fill="#38BDF8" class="svg-pulse" />
+                <circle cx="280" cy="300" r="9" fill="#818CF8" />
+
+                <!-- Organic Golden Arcs on Right -->
+                <path d="M 350 300 Q 430 190 490 250 T 460 400 Q 400 430 350 300" fill="none" stroke="url(#gradAmber)" stroke-width="3" />
+                <circle cx="490" cy="250" r="9" fill="#F59E0B" class="svg-pulse" />
+                <circle cx="460" cy="400" r="8" fill="#FB7185" class="svg-pulse" />
+
+                <!-- Central Convergence Core -->
+                <circle cx="350" cy="300" r="46" fill="#0B1325" stroke="#F8FAFC" stroke-width="3" />
+                <text x="350" y="295" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="16" font-weight="700">2026+</text>
+                <text x="350" y="315" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="12">SYNERGY</text>
+
+                <!-- Labels -->
+                <rect x="60" y="60" width="210" height="58" rx="10" fill="rgba(14,21,38,0.9)" stroke="#38BDF8" />
+                <text x="165" y="86" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="600">AI ENGINE</text>
+                <text x="165" y="106" text-anchor="middle" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="14">Knowledge & Production</text>
+
+                <rect x="430" y="480" width="220" height="58" rx="10" fill="rgba(14,21,38,0.9)" stroke="#F59E0B" />
+                <text x="540" y="506" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="600">HUMAN EDGE</text>
+                <text x="540" y="526" text-anchor="middle" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="14">Taste, Framing & Leadership</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <template class="speaker-notes">
+          <p><strong>[Slide 1 — Personal Introduction]</strong></p>
+          <p>"Hello everyone, and thank you, Professor Zhang, for inviting me to join your class today.</p>
+          <p>Before we dive in, let me briefly introduce myself. I’m <strong>Zoro Wu</strong>, and I work as an Engineering Manager in Silicon Valley, where I’ve spent the past 16 years in software engineering—building technology products, scaling engineering teams, and working first-hand with AI transformation.</p>
+          <p>Over the past few weeks in this course, you’ve analyzed how corporations like Ping An, Volkswagen, ByteDance, and DeepSeek are navigating the AI revolution. Today, I want to shift the lens from <em>corporate strategy</em> to <em>you personally</em>.</p>
+          <p>My topic today is simple but urgent: <strong>How to Win in the AI Era—and What It Actually Takes.</strong>"</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 2: THE CORE QUESTION (WHEN AI BECOMES ELECTRICITY) -->
+      <section class="slide" data-section="OPENING" data-title="When AI Becomes the Norm">
+        <div>
+          <div class="eyebrow anim-in">THE CORE PREMISE</div>
+          <h2 class="slide-title anim-in delay-1">
+            When AI Becomes <span class="text-cyan">Electricity</span>, Simply "Using AI" Is No Longer an Edge
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            When everyone has access to the same frontier models, competitive advantage shifts from access to orchestration.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- Center Fulcrum Base -->
+              <polygon points="840,390 780,510 900,510" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2.5" />
+              <line x1="540" y1="510" x2="1140" y2="510" stroke="#475569" stroke-width="4" />
+
+              <!-- Balance Beam -->
+              <line x1="260" y1="340" x2="1420" y2="240" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round" />
+              <circle cx="840" cy="290" r="18" fill="#F59E0B" stroke="#060911" stroke-width="4" />
+
+              <!-- Step 1: Left Pan (What AI Will Fulfill - Commodity Baseline) -->
+              <g class="step" data-step="1">
+                <line x1="360" y1="330" x2="360" y2="420" stroke="#38BDF8" stroke-width="3" stroke-dasharray="6 6" />
+                <rect x="100" y="100" width="540" height="210" rx="18" fill="rgba(14,21,38,0.92)" stroke="#38BDF8" stroke-width="2.5" />
+                <text x="140" y="148" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">QUESTION 01 · WHAT AI FULFILLS (THE NEW BASELINE)</text>
+                <text x="140" y="192" fill="#F8FAFC" font-family="Space Grotesk" font-size="30" font-weight="700">Speed, Knowledge Retrieval &amp; Artifact Production</text>
+                <text x="140" y="236" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="20">• Instant synthesis across any specialized discipline</text>
+                <text x="140" y="270" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="20">• Automated creation of docs, code, slides &amp; models</text>
+                <rect x="140" y="420" width="440" height="52" rx="10" fill="rgba(56,189,248,0.12)" stroke="#38BDF8" />
+                <text x="360" y="452" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="600">COST PLUMMETING TOWARD MARGINAL TOKEN PRICE</text>
+              </g>
+
+              <!-- Step 2: Right Pan (Where Humans Will Shine - High Value) -->
+              <g class="step" data-step="2">
+                <line x1="1320" y1="250" x2="1320" y2="340" stroke="#F59E0B" stroke-width="3" stroke-dasharray="6 6" />
+                <rect x="1020" y="30" width="580" height="230" rx="18" fill="rgba(25,18,12,0.92)" stroke="#F59E0B" stroke-width="3" />
+                <text x="1060" y="78" fill="#F59E0B" font-family="JetBrains Mono" font-size="16" font-weight="700">QUESTION 02 · WHERE HUMANS SHINE (THE SCARCITY)</text>
+                <text x="1060" y="122" fill="#F8FAFC" font-family="Space Grotesk" font-size="30" font-weight="700">Goal Framing, Taste, System Design &amp; Leadership</text>
+                <text x="1060" y="166" fill="#E2E8F0" font-family="Plus Jakarta Sans" font-size="20">• Knowing WHAT to build and WHY it matters</text>
+                <text x="1060" y="200" fill="#E2E8F0" font-family="Plus Jakarta Sans" font-size="20">• Discerning 90% vs. 100% quality across a vertical</text>
+                <text x="1060" y="234" fill="#E2E8F0" font-family="Plus Jakarta Sans" font-size="20">• Coaching teams to eliminate systemic friction</text>
+                <rect x="1090" y="340" width="460" height="52" rx="10" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" />
+                <text x="1320" y="372" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="16" font-weight="700">YOUR TRUE COMPETITIVE MOAT IN 2026+</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 2 — The Core Question] (2 Click-to-Reveal Steps)</strong></p>
+          <p>"Right now, everyone is asking: <em>What can AI do?</em></p>
+          <p>But within a few years, AI will no longer be a novelty—it will be the baseline norm, just like electricity or the internet. When everyone has access to the same frontier AI models, simply 'using AI' won't be your competitive advantage anymore.</p>
+          <p><strong>[Click Step 1]</strong> So today, we are going to answer two fundamental questions: First, what exact roles will AI fulfill in how we learn and how we produce?</p>
+          <p><strong>[Click Step 2]</strong> And second, when AI becomes the norm, what personal skills and human qualities will truly shine?"</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 3: SECTION 1 — FOUNDATIONAL LEARNING & EXPONENTIAL AMPLIFICATION -->
+      <section class="slide" data-section="SECTION 01 · LEARNING" data-title="How Humans Learn & Exponential AI Amplification">
+        <div>
+          <div class="eyebrow anim-in">SECTION 01 · AI EVOLVES OUR LEARNING &amp; PRODUCING PROCESSES</div>
+          <h2 class="slide-title anim-in delay-1">
+            From General Blocks to <span class="text-cyan">Exponential Amplification</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Because human learning is cumulative, an AI tutor starting at the K–Middle School foundation compounds exponentially into adulthood.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- Axes -->
+              <line x1="120" y1="480" x2="1580" y2="480" stroke="#475569" stroke-width="3" />
+              <line x1="120" y1="60" x2="120" y2="480" stroke="#475569" stroke-width="3" />
+              <text x="1580" y="525" text-anchor="end" fill="#94A3B8" font-family="JetBrains Mono" font-size="16">EDUCATIONAL &amp; CAREER TIMELINE →</text>
+              <text x="140" y="80" fill="#94A3B8" font-family="JetBrains Mono" font-size="16">COGNITIVE CAPABILITY &amp; MASTERY ↑</text>
+
+              <!-- Stage Zones -->
+              <line x1="620" y1="60" x2="620" y2="480" stroke="rgba(148,163,184,0.2)" stroke-width="2" stroke-dasharray="8 8" />
+              <line x1="1120" y1="60" x2="1120" y2="480" stroke="rgba(148,163,184,0.2)" stroke-width="2" stroke-dasharray="8 8" />
+              <text x="370" y="525" text-anchor="middle" fill="#38BDF8" font-family="Space Grotesk" font-size="20" font-weight="700">K – MIDDLE SCHOOL (GENERAL)</text>
+              <text x="870" y="525" text-anchor="middle" fill="#818CF8" font-family="Space Grotesk" font-size="20" font-weight="700">HIGH SCHOOL &amp; UNIVERSITY</text>
+              <text x="1350" y="525" text-anchor="middle" fill="#F59E0B" font-family="Space Grotesk" font-size="20" font-weight="700">SPECIALIZED CAREER</text>
+
+              <!-- Foundational Building Blocks (K-Middle School) -->
+              <g class="step" data-step="1">
+                <rect x="160" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="212" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="17" font-weight="600">Language</text>
+
+                <rect x="275" y="390" width="95" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="322" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="17" font-weight="600">Math</text>
+
+                <rect x="380" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="432" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="17" font-weight="600">Physics</text>
+
+                <rect x="495" y="390" width="105" height="65" rx="8" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="2" />
+                <text x="547" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="17" font-weight="600">History</text>
+
+                <!-- Traditional Linear Curve -->
+                <path d="M 140 460 Q 650 380 1520 260" fill="none" stroke="#64748B" stroke-width="4" stroke-dasharray="10 8" />
+                <text x="1500" y="295" text-anchor="end" fill="#94A3B8" font-family="JetBrains Mono" font-size="16">Traditional Pace (Linear &amp; Bottlenecked)</text>
+              </g>
+
+              <!-- Step 2: Exponential AI Amplification Curve -->
+              <g class="step" data-step="2">
+                <path d="M 140 460 C 520 420, 880 320, 1500 55" fill="none" stroke="url(#gradAmber)" stroke-width="8" />
+                <path d="M 140 460 C 520 420, 880 320, 1500 55 L 1500 260 Q 650 380 140 460 Z" fill="rgba(245,158,11,0.10)" />
+
+                <circle cx="620" cy="395" r="10" fill="#38BDF8" />
+                <circle cx="1120" cy="240" r="12" fill="#F59E0B" class="svg-pulse" />
+                <circle cx="1500" cy="55" r="15" fill="#FB7185" class="svg-pulse" />
+
+                <rect x="860" y="70" width="560" height="115" rx="14" fill="rgba(25,18,12,0.92)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="890" y="110" fill="#F59E0B" font-family="JetBrains Mono" font-size="16" font-weight="700">EXPONENTIAL AI COMPOUNDING EFFECT</text>
+                <text x="890" y="148" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="22" font-weight="600">Personalized AI tutoring amplifies every subsequent stage</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 3 — Foundational Learning &amp; Exponential Amplification] (2 Steps)</strong></p>
+          <p>"Let’s start with Section 1: <strong>AI is not just an automation tool—it is a tool that fundamentally evolves how we learn and how we produce.</strong></p>
+          <p>Think about how we, as human beings, actually learn.</p>
+          <p><strong>[Click Step 1]</strong> From kindergarten through middle school, we go through <strong>general knowledge learning</strong>. We absorb a wide range of foundational cognitive building blocks—languages, basic math, introductory physics, history, and how the world works.</p>
+          <p><strong>[Click Step 2]</strong> Even at this early stage, AI acts as a personalized tutor that accelerates comprehension. Watch what happens as a student moves forward: because learning is cumulative, <strong>the effect of AI-assisted learning doesn't just add up—it amplifies exponentially</strong> as we grow into later stages of school."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 4: DISRUPTING SPECIALIZED LEARNING — "PAY-AS-YOU-GO" -->
+      <section class="slide" data-section="SECTION 01 · LEARNING" data-title="The Pay-As-You-Go Learning Model">
+        <div>
+          <div class="eyebrow amber anim-in">SPECIALIZED FIELDS · HIGH SCHOOL, UNIVERSITY &amp; BEYOND</div>
+          <h2 class="slide-title anim-in delay-1">
+            From Years of Front-Loaded Theory to <span class="text-amber">"Pay-As-You-Go"</span> Mastery
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Stop memorizing textbooks before building. Pull deep specialized knowledge on demand in the act of creating.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 620px; width: 100%;">
+            <svg viewBox="0 0 1680 560">
+              <!-- TOP PIPELINE: THE OLD FRONT-LOADED MODEL -->
+              <g class="step" data-step="1">
+                <rect x="60" y="40" width="1560" height="200" rx="18" fill="rgba(15,23,42,0.75)" stroke="rgba(148,163,184,0.25)" stroke-width="2" />
+                <text x="100" y="84" fill="#94A3B8" font-family="JetBrains Mono" font-size="16" font-weight="700">OLD PARADIGM · THE "FRONT-LOADED" TUITION MODEL (YEARS OF DELAY)</text>
+
+                <!-- Heavy Blocks of Theory -->
+                <rect x="100" y="110" width="260" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="230" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20" font-weight="600">Year 1–2: Textbooks</text>
+                <text x="230" y="180" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">Abstract Foundations</text>
+
+                <rect x="390" y="110" width="260" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="520" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20" font-weight="600">Year 3–4: All Theories</text>
+                <text x="520" y="180" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">Just-in-Case Memorization</text>
+
+                <rect x="680" y="110" width="280" height="95" rx="10" fill="#1E293B" stroke="#475569" stroke-width="2" />
+                <text x="820" y="152" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20" font-weight="600">Year 5+: Syntax &amp; Drill</text>
+                <text x="820" y="180" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">Implementation Details</text>
+
+                <line x1="975" y1="157" x2="1170" y2="157" stroke="#64748B" stroke-width="4" stroke-dasharray="8 8" />
+                <rect x="1185" y="110" width="380" height="95" rx="10" fill="rgba(251,113,133,0.12)" stroke="#FB7185" stroke-width="2" />
+                <text x="1375" y="152" text-anchor="middle" fill="#FB7185" font-family="Space Grotesk" font-size="22" font-weight="700">Finally Build Something</text>
+                <text x="1375" y="180" text-anchor="middle" fill="#FDA4AF" font-family="JetBrains Mono" font-size="14">SLOW · TEDIOUS · HIGH DROPOUT</text>
+              </g>
+
+              <!-- BOTTOM PIPELINE: THE AI PAY-AS-YOU-GO MODEL -->
+              <g class="step" data-step="2">
+                <rect x="60" y="275" width="1560" height="255" rx="18" fill="rgba(14,25,45,0.9)" stroke="#38BDF8" stroke-width="3" />
+                <text x="100" y="320" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">NEW PARADIGM · THE AI "PAY-AS-YOU-GO" ITERATION LOOP (START DAY 1)</text>
+
+                <!-- Loop Node 1 -->
+                <rect x="100" y="355" width="320" height="130" rx="14" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="260" y="405" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="15" font-weight="700">DAY 01</text>
+                <text x="260" y="438" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="26" font-weight="700">Start Building Now</text>
+                <text x="260" y="466" text-anchor="middle" fill="#CBD5E1" font-family="Plus Jakarta Sans" font-size="16">Anchor on a concrete creation goal</text>
+
+                <!-- Loop Arrow 1 -->
+                <path d="M 430 420 L 545 420" stroke="#38BDF8" stroke-width="4" class="svg-flow" />
+
+                <!-- Loop Node 2 (On-Demand Pull) -->
+                <rect x="555" y="345" width="470" height="150" rx="16" fill="rgba(56,189,248,0.16)" stroke="#38BDF8" stroke-width="3" />
+                <text x="790" y="390" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="15" font-weight="700">ON-DEMAND KNOWLEDGE PULL</text>
+                <text x="790" y="428" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="26" font-weight="700">Query AI at the Point of Friction</text>
+                <text x="790" y="460" text-anchor="middle" fill="#E2E8F0" font-family="Plus Jakarta Sans" font-size="17">Absorb exact theory &amp; implementation as needed</text>
+                <!-- Repeat Circular Arrow -->
+                <path d="M 920 345 C 880 295, 700 295, 660 345" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="6 6" class="svg-flow" />
+                <text x="790" y="325" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="700">↻ REPEAT 100× WHILE CREATING</text>
+
+                <!-- Loop Arrow 2 -->
+                <path d="M 1035 420 L 1145 420" stroke="#34D399" stroke-width="4" class="svg-flow" />
+
+                <!-- Loop Node 3 (Domain Expert) -->
+                <rect x="1155" y="355" width="420" height="130" rx="14" fill="rgba(52,211,153,0.15)" stroke="#34D399" stroke-width="2.5" />
+                <text x="1365" y="402" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="15" font-weight="700">COMPOUNDED OUTCOME</text>
+                <text x="1365" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="26" font-weight="700">Real-World Domain Expert</text>
+                <text x="1365" y="466" text-anchor="middle" fill="#CBD5E1" font-family="Plus Jakarta Sans" font-size="16">Built through shipping, not rote memorization</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 4 — Disrupting Specialized Learning: "Pay-As-You-Go"] (2 Steps)</strong></p>
+          <p>"Now, look at what happens when we enter high school, university, and our professional careers. This is where we shift to <strong>specialized fields</strong>—engineering, finance, medicine, design, or business strategy.</p>
+          <p><strong>[Click Step 1]</strong> Historically, mastering a specialized field required a long, tedious, 'front-loaded' process. You had to spend years reading thick textbooks, memorizing abstract theories, and studying implementation details <em>before</em> you could actually build anything meaningful.</p>
+          <p><strong>[Click Step 2]</strong> <strong>AI is completely disrupting this model.</strong> Instead of paying years of tuition in time and memorization upfront, specialized learning is becoming a <strong>'Pay-As-You-Go' model</strong>. You start by building and creating on Day One. As you hit a problem, you pull the exact specialized knowledge you need from AI <em>in the process of creating</em>.</p>
+          <p>You repeat this build-and-learn loop over and over. That is how you become an expert in the AI era—through rapid real-world iteration, without needing to memorize every theory and implementation detail in a textbook first."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 5: CASE IN POINT — BUILDING A WOODEN TABLE -->
+      <section class="slide" data-section="SECTION 01 · LEARNING" data-title="Example: Building a Wooden Table">
+        <div>
+          <div class="eyebrow amber anim-in">CONCRETE THOUGHT EXPERIMENT</div>
+          <h2 class="slide-title anim-in delay-1">
+            Building a Wooden Table: <span class="text-amber">Apprenticeship Ceiling</span> vs. <span class="text-cyan">Infinite Depth</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Before AI, you were capped by your teacher's knowledge base. With AI, you can zoom from high-level design down to the molecular physics of every joint.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- Left: The Old Way -->
+          <div class="card-glass amber-edge step" data-step="1" style="flex: 0.85; height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">BEFORE AI · TRADITIONAL CRAFT</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 36px; margin-top: 16px;">Bounded by One Master's Ceiling</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.55; margin-top: 16px;">
+                To learn how to nail, stabilize legs, and smooth the wood grain, you had to watch and imitate a single human teacher.
+              </p>
+            </div>
+
+            <svg viewBox="0 0 560 250" style="height: 230px;">
+              <rect x="20" y="20" width="520" height="210" rx="14" fill="rgba(0,0,0,0.35)" stroke="rgba(245,158,11,0.4)" stroke-dasharray="6 6" />
+              <line x1="20" y1="70" x2="540" y2="70" stroke="#FB7185" stroke-width="3" />
+              <text x="280" y="52" text-anchor="middle" fill="#FB7185" font-family="JetBrains Mono" font-size="15" font-weight="700">▲ HARD CEILING = TEACHER'S KNOWLEDGE LIMIT</text>
+              <text x="280" y="130" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="600">"Copy how I hammer this nail."</text>
+              <text x="280" y="168" text-anchor="middle" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="18">Months of physical trial-and-error · Zero physics theory</text>
+            </svg>
+
+            <div style="font-family: 'JetBrains Mono'; font-size: 15px; color: var(--rose);">
+              × LIMITED BREADTH · × TACIT BLIND SPOTS · × MONTHS OF REPETITION
+            </div>
+          </div>
+
+          <!-- Right: The AI Blueprint Table -->
+          <div class="visual-box step" data-step="2" style="flex: 1.35; height: 600px; border-color: var(--border-cyan);">
+            <svg viewBox="0 0 980 560">
+              <text x="40" y="45" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">WITH AI · UNBOUNDED BREADTH &amp; FIRST-PRINCIPLES PHYSICS ON DEMAND</text>
+
+              <!-- Exploded Isometric Table Top -->
+              <polygon points="490,95 790,185 490,275 190,185" fill="rgba(245,158,11,0.18)" stroke="#F59E0B" stroke-width="3" class="svg-float" />
+              <polygon points="490,110 790,200 490,290 190,200" fill="none" stroke="rgba(56,189,248,0.5)" stroke-width="1.5" stroke-dasharray="5 5" />
+
+              <!-- Isometric Table Legs & Frame -->
+              <line x1="240" y1="220" x2="240" y2="450" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" />
+              <line x1="490" y1="295" x2="490" y2="520" stroke="#38BDF8" stroke-width="12" stroke-linecap="round" />
+              <line x1="740" y1="220" x2="740" y2="450" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" />
+              <line x1="240" y1="280" x2="490" y2="355" stroke="#818CF8" stroke-width="6" />
+              <line x1="740" y1="280" x2="490" y2="355" stroke="#818CF8" stroke-width="6" />
+
+              <!-- Glowing Callout 1: Surface Grain Physics -->
+              <circle cx="610" cy="175" r="9" fill="#F59E0B" class="svg-pulse" />
+              <line x1="610" y1="175" x2="700" y2="95" stroke="#F59E0B" stroke-width="2" />
+              <rect x="660" y="30" width="295" height="75" rx="10" fill="rgba(14,21,38,0.95)" stroke="#F59E0B" />
+              <text x="680" y="58" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="700">SURFACE SMOOTHING PHYSICS</text>
+              <text x="680" y="84" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="15">Cellulose fiber shear &amp; grit progression</text>
+
+              <!-- Glowing Callout 2: Nail & Joint Torque -->
+              <circle cx="490" cy="355" r="11" fill="#38BDF8" class="svg-pulse" />
+              <line x1="490" y1="355" x2="660" y2="395" stroke="#38BDF8" stroke-width="2" />
+              <rect x="650" y="355" width="305" height="90" rx="10" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" />
+              <text x="670" y="383" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">MORTISE JOINT &amp; FASTENER TORQUE</text>
+              <text x="670" y="409" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="15">Why 45° dovetail resists lateral shear:</text>
+              <text x="670" y="431" fill="#34D399" font-family="JetBrains Mono" font-size="14">τ_max = F · sin(θ) / A_contact</text>
+
+              <!-- Glowing Callout 3: Structural Stability -->
+              <circle cx="240" cy="340" r="9" fill="#34D399" class="svg-pulse" />
+              <line x1="240" y1="340" x2="150" y2="390" stroke="#34D399" stroke-width="2" />
+              <rect x="25" y="365" width="290" height="85" rx="10" fill="rgba(14,21,38,0.95)" stroke="#34D399" />
+              <text x="45" y="393" fill="#34D399" font-family="JetBrains Mono" font-size="13" font-weight="700">LATERAL STABILIZATION</text>
+              <text x="45" y="418" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="15">Center-of-mass &amp; torsional rigidity</text>
+              <text x="45" y="438" fill="#94A3B8" font-family="JetBrains Mono" font-size="13">10 style variations in 30 seconds</text>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 5 — Building a Wooden Table] (2 Steps)</strong></p>
+          <p>"Let me give you a concrete example of how profound this shift is. Imagine you want to build a beautiful, high-quality <strong>wooden table</strong>.</p>
+          <p><strong>[Click Step 1]</strong> <strong>In the old days</strong>, how did you learn to do that? You had to find a master carpenter who was already an expert, stand next to them, observe, and copy what they did. Think about how many tiny, hidden details go into a great table: what angle to drive the nails, how to stabilize the joints so the legs don't wobble, how to sand and smooth the wood grain. In that traditional world, <strong>you were strictly limited by your teacher’s knowledge base and skill level.</strong></p>
+          <p><strong>[Click Step 2]</strong> <strong>Now, look at how you build that table with AI.</strong> With AI as your partner, you can navigate <strong>as broadly and as deeply as you please</strong>. You don’t just ask how to stabilize the table—you can zoom all the way into the structural physics, torque, and material science behind <em>why</em> one joint holds better than another. Before AI, our growth was capped by our teacher’s ceiling and months of repetitive trial and error. <strong>With AI, the ceiling is gone.</strong>"</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 6: SECTION 2 — AI AS A PRODUCTION TOOL (ABACUS TO CALCULATOR) -->
+      <section class="slide" data-section="SECTION 02 · PRODUCTION" data-title="AI as a Production Tool: The New Calculator">
+        <div>
+          <div class="eyebrow anim-in">SECTION 02 · AI AS A PRODUCTION TOOL</div>
+          <h2 class="slide-title anim-in delay-1">
+            Like Calculators Replaced the Abacus, AI Replaces Manual <span class="text-cyan">"White-Collar Artifacts"</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            A massive set of manual "Human + Computer" formatting and syntax skills are being deprecated right now.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <!-- ERA 1: ABACUS -->
+              <g>
+                <rect x="60" y="70" width="440" height="400" rx="20" fill="rgba(15,23,42,0.75)" stroke="#475569" stroke-width="2" />
+                <text x="100" y="120" fill="#94A3B8" font-family="JetBrains Mono" font-size="15" font-weight="700">ERA 01 · MANUAL ARITHMETIC</text>
+                <text x="100" y="160" fill="#F8FAFC" font-family="Space Grotesk" font-size="30" font-weight="700">Human + Abacus</text>
+                <!-- Abacus Illustration -->
+                <rect x="120" y="200" width="320" height="160" rx="10" fill="#0F172A" stroke="#64748B" stroke-width="3" />
+                <line x1="120" y1="250" x2="440" y2="250" stroke="#64748B" stroke-width="3" />
+                <g fill="#F59E0B" opacity="0.7">
+                  <circle cx="170" cy="225" r="12" /><circle cx="240" cy="225" r="12" /><circle cx="310" cy="225" r="12" /><circle cx="380" cy="225" r="12" />
+                  <circle cx="170" cy="285" r="12" /><circle cx="240" cy="315" r="12" /><circle cx="310" cy="285" r="12" /><circle cx="380" cy="325" r="12" />
+                </g>
+                <text x="280" y="415" text-anchor="middle" fill="#FB7185" font-family="JetBrains Mono" font-size="16" font-weight="700">REPLACED BY ELECTRONIC CALCULATOR</text>
+              </g>
+
+              <!-- ERA 2: HUMAN + COMPUTER (DEPRECATED) -->
+              <g class="step" data-step="1">
+                <rect x="570" y="70" width="520" height="400" rx="20" fill="rgba(15,23,42,0.85)" stroke="#FB7185" stroke-width="2.5" />
+                <text x="610" y="120" fill="#FB7185" font-family="JetBrains Mono" font-size="15" font-weight="700">ERA 02 · MANUAL ARTIFACT GRIND (1995–2024)</text>
+                <text x="610" y="160" fill="#F8FAFC" font-family="Space Grotesk" font-size="30" font-weight="700">Human + Computer</text>
+
+                <!-- 4 Artifact Pills -->
+                <rect x="610" y="195" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="715" y="237" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20">Spreadsheets</text>
+
+                <rect x="840" y="195" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="945" y="237" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20">Slide Decks</text>
+
+                <rect x="610" y="280" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="715" y="322" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20">Strategy Docs</text>
+
+                <rect x="840" y="280" width="210" height="70" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="945" y="322" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="20">Boilerplate Code</text>
+
+                <!-- DEPRECATED STAMP -->
+                <g transform="translate(830, 275) rotate(-14)">
+                  <rect x="-195" y="-42" width="390" height="84" rx="10" fill="rgba(251,113,133,0.18)" stroke="#FB7185" stroke-width="4" />
+                  <text x="0" y="10" text-anchor="middle" fill="#FB7185" font-family="JetBrains Mono" font-size="30" font-weight="700" letter-spacing="4">DEPRECATED</text>
+                </g>
+                <text x="830" y="415" text-anchor="middle" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="18">Manual syntax, formulas &amp; box-aligning</text>
+              </g>
+
+              <!-- ERA 3: HUMAN + AI ORCHESTRATION -->
+              <g class="step" data-step="2">
+                <rect x="1160" y="70" width="460" height="400" rx="20" fill="rgba(14,28,50,0.92)" stroke="#38BDF8" stroke-width="3" />
+                <text x="1200" y="120" fill="#38BDF8" font-family="JetBrains Mono" font-size="15" font-weight="700">ERA 03 · INTENT-DRIVEN PRODUCTION (2026+)</text>
+                <text x="1200" y="160" fill="#F8FAFC" font-family="Space Grotesk" font-size="30" font-weight="700">Human Direction + AI</text>
+
+                <circle cx="1390" cy="275" r="76" fill="rgba(56,189,248,0.15)" stroke="#38BDF8" stroke-width="3" class="svg-pulse" />
+                <text x="1390" y="270" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">AI Production</text>
+                <text x="1390" y="296" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="15">ENGINE</text>
+
+                <text x="1390" y="415" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="16" font-weight="700">10×–100× OUTPUT AT MARGINAL TOKEN COST</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 6 — AI as a Production Tool: Abacus to Calculator] (2 Steps)</strong></p>
+          <p>"That brings us to Section 2: <strong>AI as a Production Tool.</strong></p>
+          <p>Right now, in 2026, AI has already proven to be extraordinarily successful at producing what we call <strong>white-collar artifacts</strong>: spreadsheets, financial models, presentation slides, strategy documents, and software programs.</p>
+          <p>Think of what happened when the electronic calculator replaced the abacus. Overnight, a massive set of manual abacus skills—skills people spent years perfecting—became obsolete.</p>
+          <p><strong>[Click Step 1]</strong> Today, AI is doing the exact same thing to the <strong>'Human + Computer' combination</strong>. For the past thirty years, white-collar productivity meant a human sitting in front of a screen manually typing formulas into Excel, aligning boxes in PowerPoint, drafting paragraphs in Word, or writing boilerplate code line by line.</p>
+          <p><strong>[Click Step 2]</strong> A huge portion of those manual 'abacus skills' are now being deprecated. They simply aren't where human value lives anymore."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 7: IF YOU DID NOT POSSESS THESE SKILLS — THE GREAT EQUALIZER -->
+      <section class="slide" data-section="SECTION 02 · PRODUCTION" data-title="Path A: If You Didn't Have These Skills">
+        <div>
+          <div class="eyebrow emerald anim-in">PATH A · IF YOU DID NOT POSSESS THESE SKILLS TODAY</div>
+          <h2 class="slide-title anim-in delay-1">
+            Great News: You Just Unlocked a <span class="text-emerald">Full Production Studio</span> for "Free"
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            You can now build software, financial models, and strategy artifacts solo—provided you pay two small entry costs.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- Left: Capability Unlock Diagram -->
+          <div class="visual-box anim-in delay-2" style="flex: 1.15; height: 600px;">
+            <svg viewBox="0 0 920 540">
+              <!-- Center Node: YOU -->
+              <circle cx="460" cy="240" r="78" fill="rgba(52,211,153,0.16)" stroke="#34D399" stroke-width="3" />
+              <text x="460" y="232" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="26" font-weight="700">YOU</text>
+              <text x="460" y="260" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="14">SOLO CREATOR</text>
+
+              <!-- 4 Unlocked Satellites -->
+              <g stroke="#34D399" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow">
+                <line x1="390" y1="190" x2="230" y2="110" />
+                <line x1="530" y1="190" x2="690" y2="110" />
+                <line x1="390" y1="290" x2="230" y2="370" />
+                <line x1="530" y1="290" x2="690" y2="370" />
+              </g>
+
+              <rect x="60" y="55" width="260" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="190" y="95" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">UNLOCKED FOR "FREE"</text>
+              <text x="190" y="122" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Full-Stack Software</text>
+
+              <rect x="600" y="55" width="260" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="730" y="95" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">UNLOCKED FOR "FREE"</text>
+              <text x="730" y="122" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Complex Data Models</text>
+
+              <rect x="60" y="330" width="260" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="190" y="370" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">UNLOCKED FOR "FREE"</text>
+              <text x="190" y="397" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Executive Slide Decks</text>
+
+              <rect x="600" y="330" width="260" height="90" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+              <text x="730" y="370" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">UNLOCKED FOR "FREE"</text>
+              <text x="730" y="397" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Market &amp; Legal Synthesis</text>
+
+              <rect x="180" y="460" width="560" height="52" rx="12" fill="rgba(52,211,153,0.12)" stroke="#34D399" />
+              <text x="460" y="492" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="16" font-weight="700">1 PERSON CAN NOW EXECUTE WHAT USED TO TAKE A 5-PERSON TEAM</text>
+            </svg>
+          </div>
+
+          <!-- Right: The Two Real Costs -->
+          <div class="col-left" style="flex: 0.9; gap: 28px;">
+            <div class="card-glass cyan-edge step" data-step="1">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">PRICE TAG #1 · FINANCIAL COST</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 34px; margin-top: 14px;">Pay for "Tokens"</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;">
+                A tiny, variable usage fee for AI compute fuel—pennies on the dollar compared to hiring specialized labor.
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">PRICE TAG #2 · THE REAL SUNK COST</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 34px; margin-top: 14px;">Learn the New Producing Model</h3>
+              <p style="font-size: 21px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;">
+                You must invest upfront hours to get familiar with prompting, iterating, and stretching your imagination to grasp the newly expanded universe of what's possible.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 7 — If You Did NOT Possess These Skills] (2 Steps)</strong></p>
+          <p>"Now, what does this mean for you? It depends on which side of the line you stand on today.</p>
+          <p><strong>First: If you did NOT possess those specialized production skills before—this is incredible news for you.</strong> Maybe you never learned how to write Python code, build complex Excel macros, or design polished decks. Today, you can get equipped with all of those capabilities practically for 'free.' That alone unleashes an explosion of possibilities for what you, as a single individual, can build and execute.</p>
+          <p><strong>[Click Step 1]</strong> Of course, 'free' comes with two small caveats: First, there is a small monetary cost: you pay for <strong>'tokens'</strong>—the compute fuel that powers AI.</p>
+          <p><strong>[Click Step 2]</strong> Second, and much more importantly, there is a <strong>sunk cost of time and mindset</strong>. You have to be willing to invest the upfront effort to learn this new production model, experiment with it daily, and stretch your imagination to understand how big your new universe of possibilities really is."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 8: IF YOU DO POSSESS THESE SKILLS — GO FULL-STACK ACROSS THE VERTICAL -->
+      <section class="slide" data-section="SECTION 02 · PRODUCTION" data-title="Path B: If You Do Have These Skills">
+        <div>
+          <div class="eyebrow rose anim-in">PATH B · IF YOU ALREADY POSSESS THESE SKILLS TODAY</div>
+          <h2 class="slide-title anim-in delay-1">
+            Offload Old Habits, Keep Your <span class="text-amber">Taste</span>, and Expand Across the <span class="text-cyan">Vertical Pipeline</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Your experience gives you an eye for detail—but staying in one narrow box is fatal if you don't become a multi-faceted player.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <!-- The 5 Stages of the Domain Vertical Pipeline -->
+              <text x="80" y="55" fill="#94A3B8" font-family="JetBrains Mono" font-size="16" font-weight="700">THE END-TO-END VERTICAL PIPELINE OF YOUR DOMAIN</text>
+
+              <g transform="translate(80, 85)">
+                <rect x="0" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="140" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">STAGE 01</text>
+                <text x="140" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="24" font-weight="700">Customer Insight</text>
+
+                <rect x="310" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="450" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">STAGE 02</text>
+                <text x="450" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="24" font-weight="700">Product &amp; UX</text>
+
+                <!-- Narrow Specialist Box (Highlighted) -->
+                <rect x="620" y="0" width="280" height="150" rx="14" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" stroke-width="3" />
+                <text x="760" y="50" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="14" font-weight="700">YOUR OLD LANE</text>
+                <text x="760" y="88" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="24" font-weight="700">Core Execution</text>
+                <text x="760" y="118" text-anchor="middle" fill="#FDE68A" font-family="JetBrains Mono" font-size="13">★ Deep Sense &amp; Detail Edge</text>
+
+                <rect x="930" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="1070" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">STAGE 04</text>
+                <text x="1070" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="24" font-weight="700">Data &amp; Analytics</text>
+
+                <rect x="1240" y="0" width="280" height="150" rx="14" fill="#131C31" stroke="#334155" stroke-width="2" />
+                <text x="1380" y="55" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">STAGE 05</text>
+                <text x="1380" y="92" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="24" font-weight="700">Go-To-Market</text>
+              </g>
+
+              <!-- Step 1: Mindshift (Offload Old + Load New) -->
+              <g class="step" data-step="1">
+                <rect x="510" y="265" width="660" height="95" rx="14" fill="rgba(251,113,133,0.12)" stroke="#FB7185" stroke-width="2" />
+                <text x="840" y="305" text-anchor="middle" fill="#FB7185" font-family="JetBrains Mono" font-size="15" font-weight="700">STEP 1 · THE PSYCHOLOGICAL RESET</text>
+                <text x="840" y="338" text-anchor="middle" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="21" font-weight="600">Offload manual craft pride → Keep your 90%-vs-100% quality judgment</text>
+              </g>
+
+              <!-- Step 2: Expand Horizontally Across the Full Vertical Pipeline -->
+              <g class="step" data-step="2">
+                <!-- Expansion Arrows -->
+                <path d="M 680 435 L 120 435" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+                <polygon points="100,435 130,418 130,452" fill="#38BDF8" />
+                <path d="M 1000 435 L 1560 435" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+                <polygon points="1580,435 1550,418 1550,452" fill="#38BDF8" />
+
+                <rect x="80" y="385" width="1520" height="110" rx="18" fill="rgba(56,189,248,0.14)" stroke="#38BDF8" stroke-width="3" />
+                <text x="840" y="430" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">STEP 2 · BECOME A MULTI-FACETED FULL-PIPELINE PLAYER</text>
+                <text x="840" y="468" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="28" font-weight="700">← Step Forward &amp; Own Upstream Strategy + Downstream Execution with AI →</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 8 — If You DO Possess These Skills Today] (2 Steps)</strong></p>
+          <p>"<strong>Second: What if you DO already possess those hard-earned manual skills today?</strong> Maybe you are already a great coder, a financial modeling wizard, or a master slide builder. To be candid with you: <strong>you are the ones who face the hardest psychological adjustment.</strong></p>
+          <p><strong>[Click Step 1]</strong> To win, you have to consciously adapt your mindset. You have to be willing to <strong>offload your old manual habits</strong>—the very skills that used to make you feel valuable—and <strong>load a new operating system.</strong> Your years of experience are not wasted: they give you a massive edge in <strong>product sense, taste, and attention to detail</strong>.</p>
+          <p><strong>[Click Step 2]</strong> <strong>However, having good taste in one narrow box will not save you if you refuse to become a multi-faceted player.</strong> So step forward and learn more about the other areas across the entire <strong>vertical pipeline of your domain</strong>."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 9: SECTION 3 — CORE SKILL #1: RAPID GOAL-DRIVEN LEARNER -->
+      <section class="slide" data-section="SECTION 03 · HOW TO WIN" data-title="Core Skill #1: Rapid Goal-Driven Learner">
+        <div>
+          <div class="eyebrow anim-in">SECTION 03 · HOW TO WIN AS AN INDIVIDUAL &amp; SCALE TO A TEAM</div>
+          <h2 class="slide-title anim-in delay-1">
+            Core Skill #1: The <span class="text-cyan">Goal-Driven Learner</span> Who Absorbs on Demand
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Use AI as a high-compression prism to absorb unfamiliar technical, legal, or market knowledge strictly for your goal.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- Left SVG Prism Visual -->
+          <div class="visual-box anim-in delay-2" style="flex: 1.05; height: 600px;">
+            <svg viewBox="0 0 840 540">
+              <!-- Unstructured Knowledge Wall -->
+              <rect x="40" y="70" width="200" height="400" rx="14" fill="#131C31" stroke="#475569" stroke-width="2" />
+              <text x="140" y="125" text-anchor="middle" fill="#94A3B8" font-family="JetBrains Mono" font-size="14">UNFAMILIAR</text>
+              <text x="140" y="150" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Domain Silos</text>
+              <text x="140" y="210" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">• Cloud Arch Specs</text>
+              <text x="140" y="250" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">• PIPL Privacy Law</text>
+              <text x="140" y="290" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">• NMPA Trial Rules</text>
+              <text x="140" y="330" text-anchor="middle" fill="#64748B" font-family="JetBrains Mono" font-size="14">• Supply Chain Math</text>
+
+              <!-- Rays into AI Prism -->
+              <line x1="240" y1="160" x2="390" y2="240" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+              <line x1="240" y1="270" x2="390" y2="270" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+              <line x1="240" y1="380" x2="390" y2="300" stroke="#64748B" stroke-width="2.5" stroke-dasharray="6 6" class="svg-flow" />
+
+              <!-- AI Prism Triangle -->
+              <polygon points="430,130 330,370 530,370" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="3.5" />
+              <text x="430" y="315" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="20" font-weight="700">AI Synthesis</text>
+              <text x="430" y="340" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13">GOAL FILTER</text>
+
+              <!-- Focused Laser Beam -->
+              <line x1="485" y1="265" x2="690" y2="265" stroke="#F59E0B" stroke-width="8" />
+              <line x1="485" y1="265" x2="690" y2="265" stroke="#FEF08A" stroke-width="3" />
+
+              <!-- Target Bullseye -->
+              <circle cx="725" cy="265" r="68" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="3" class="svg-pulse" />
+              <circle cx="725" cy="265" r="36" fill="rgba(245,158,11,0.3)" stroke="#F59E0B" stroke-width="2" />
+              <circle cx="725" cy="265" r="12" fill="#F59E0B" />
+              <text x="725" y="375" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="15" font-weight="700">YOUR SPECIFIC GOAL</text>
+            </svg>
+          </div>
+
+          <!-- Right: Real Examples -->
+          <div class="col-left" style="flex: 1; gap: 26px;">
+            <div class="card-glass cyan-edge step" data-step="1">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">EXAMPLE 01 · CROSS-FUNCTIONAL FLUENCY</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 30px; margin-top: 12px;">Auditing a Vendor Architecture in 1 Hour</h3>
+              <p style="font-size: 20px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;">
+                A non-CS business manager feeds a complex technical proposal into AI, uncovers hidden cloud compute bottlenecks, and walks into the review asking sharp, Level-3 engineering questions.
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">EXAMPLE 02 · REGULATORY SYNTHESIS (IBM WATSON CASE)</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 30px; margin-top: 12px;">Mastering PIPL &amp; NMPA Rules in an Afternoon</h3>
+              <p style="font-size: 20px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;">
+                Instead of waiting 3 weeks for external consultants, you synthesize China's PIPL data localization and NMPA clinical trial rules in 2 hours to draft a compliant hospital pilot roadmap.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 9 — Core Skill #1: Rapid Goal-Driven Learner] (2 Steps)</strong></p>
+          <p>"So let’s bring this together in Section 3: <strong>How do you win as an individual, and how do you scale that edge into a fiercely competitive team?</strong></p>
+          <p><strong>Core Skill #1: Become a rapid, goal-driven learner who uses AI to absorb domain knowledge at warp speed.</strong> Winning individuals don't wait to be trained, and they don't say, <em>'That’s outside my department.'</em></p>
+          <p><strong>[Click Step 1]</strong> <strong>Example A (Cross-Functional Fluency):</strong> Imagine you are a business manager evaluating a complex technical proposal from a software vendor. Today, you can feed that architecture doc into an AI reasoning partner, expose the hidden cost bottlenecks, and walk into the meeting asking sharp, level-three technical questions.</p>
+          <p><strong>[Click Step 2]</strong> <strong>Example B (Entering a New Market or Regulatory Regime):</strong> Suppose your company wants to pilot a healthcare AI product in China—like the IBM Watson case in your syllabus. Instead of waiting three weeks for external consultants, you spend two hours with AI synthesizing China’s PIPL data localization rules and NMPA clinical trial standards, drafting a compliant pilot roadmap before competitors even schedule their kickoff call."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 10: CORE SKILL #2: SURGICAL WORKFLOW ARCHITECT -->
+      <section class="slide" data-section="SECTION 03 · HOW TO WIN" data-title="Core Skill #2: Surgical Workflow Architect">
+        <div>
+          <div class="eyebrow amber anim-in">SECTION 03 · INDIVIDUAL MASTERY</div>
+          <h2 class="slide-title anim-in delay-1">
+            Core Skill #2: Know Exactly What AI Can <span class="text-amber">Replace in Your Process</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            AI saves more time than most people can imagine—freeing up 70% of your calendar to reinvest in high-leverage strategy.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <div class="visual-box anim-in delay-2" style="height: 610px; width: 100%;">
+            <svg viewBox="0 0 1680 540">
+              <!-- BEFORE BAR: 40-HOUR WEEK -->
+              <text x="80" y="65" fill="#94A3B8" font-family="JetBrains Mono" font-size="16" font-weight="700">TRADITIONAL WORKWEEK · 75% CONSUMED BY MANUAL PRODUCTION GRIND</text>
+              <g transform="translate(80, 85)">
+                <rect x="0" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="180" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="21">CSV Cleaning &amp; Excel</text>
+
+                <rect x="375" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="555" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="21">15-Page Spec Docs</text>
+
+                <rect x="750" y="0" width="360" height="95" rx="10" fill="#1E293B" stroke="#475569" />
+                <text x="930" y="55" text-anchor="middle" fill="#CBD5E1" font-family="Space Grotesk" font-size="21">Slide &amp; Report Formatting</text>
+
+                <rect x="1125" y="0" width="395" height="95" rx="10" fill="rgba(245,158,11,0.2)" stroke="#F59E0B" stroke-width="2" />
+                <text x="1322" y="55" text-anchor="middle" fill="#F59E0B" font-family="Space Grotesk" font-size="21" font-weight="700">25% Strategy &amp; Decisions</text>
+              </g>
+
+              <!-- AFTER BAR: AI-NATIVE WORKWEEK -->
+              <text x="80" y="250" fill="#38BDF8" font-family="JetBrains Mono" font-size="16" font-weight="700">AI-ARCHITECTED WORKWEEK · COMPRESS ARTIFACTS INTO MINUTES, EXPAND HIGH-VALUE FOCUS</text>
+              <g transform="translate(80, 270)">
+                <rect x="0" y="0" width="320" height="105" rx="12" fill="rgba(56,189,248,0.2)" stroke="#38BDF8" stroke-width="3" />
+                <text x="160" y="45" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="14" font-weight="700">⚡ AI PRODUCTION PIPELINE</text>
+                <text x="160" y="75" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="22" font-weight="700">Automated in Minutes</text>
+
+                <rect x="340" y="0" width="1180" height="105" rx="12" fill="rgba(52,211,153,0.16)" stroke="#34D399" stroke-width="3" />
+                <text x="930" y="48" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="15" font-weight="700">★ FREED-UP COGNITIVE BANDWIDTH (80% OF YOUR TIME)</text>
+                <text x="930" y="80" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="26" font-weight="700">Deep Customer Strategy, Creative Architecture &amp; Human Relationships</text>
+              </g>
+
+              <!-- 2 Concrete Example Cards at Bottom -->
+              <g class="step" data-step="1">
+                <rect x="80" y="405" width="740" height="115" rx="14" fill="rgba(14,21,38,0.95)" stroke="#38BDF8" stroke-width="2" />
+                <text x="110" y="440" fill="#38BDF8" font-family="JetBrains Mono" font-size="14" font-weight="700">EXAMPLE A · WEEKLY BUSINESS REVIEW AUTOMATION</text>
+                <text x="110" y="472" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="19" font-weight="600">2 Days of CSV cleaning &amp; charting → 10-Min Automated Pipeline</text>
+                <text x="110" y="500" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="16">Ingests raw tables, flags anomalies &amp; drafts executive narrative automatically.</text>
+              </g>
+
+              <g class="step" data-step="2">
+                <rect x="860" y="405" width="740" height="115" rx="14" fill="rgba(14,21,38,0.95)" stroke="#F59E0B" stroke-width="2" />
+                <text x="890" y="440" fill="#F59E0B" font-family="JetBrains Mono" font-size="14" font-weight="700">EXAMPLE B · CLICKABLE PROTOTYPES OVER 15-PAGE PRDs</text>
+                <text x="890" y="472" fill="#F8FAFC" font-family="Plus Jakarta Sans" font-size="19" font-weight="600">3 Weeks of spec debates → 30-Min Live Interactive Prototype</text>
+                <text x="890" y="500" fill="#94A3B8" font-family="Plus Jakarta Sans" font-size="16">Put a working app in front of real customers the same afternoon before spending R&amp;D.</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 10 — Core Skill #2: Surgical Workflow Architect] (2 Steps)</strong></p>
+          <p>"<strong>Core Skill #2: Become a knowledge-rich expert on what AI can replace inside your own work process.</strong></p>
+          <p>Most people underestimate just how much time AI as a production tool can save. True winners audit their entire calendar and workflow. They ruthlessly automate the repetitive 70% of their job so they can reinvest that freed-up time into high-leverage thinking, customer relationships, and strategy.</p>
+          <p><strong>[Click Step 1]</strong> <strong>Example A (From Raw Data to Decision):</strong> An analyst used to spend two full days exporting messy CSV files, cleaning rows in Excel, and writing a summary memo. An AI-native professional builds a repeatable workflow that flags anomalies and drafts the narrative in ten minutes—freeing up two full days every week.</p>
+          <p><strong>[Click Step 2]</strong> <strong>Example B (Prototyping Instead of Endless Meetings):</strong> Instead of spending three weeks writing a 15-page requirement doc and arguing in meetings, a manager uses AI to generate a live, clickable prototype in 30 minutes and validates it with users that same afternoon."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 11: CORE SKILL #3: THE FORCE-MULTIPLIER LEADER -->
+      <section class="slide" data-section="SECTION 03 · HOW TO WIN" data-title="Core Skill #3: The Force-Multiplier Leader">
+        <div>
+          <div class="eyebrow emerald anim-in">SECTION 03 · SCALING TO A COMPETITIVE TEAM</div>
+          <h2 class="slide-title anim-in delay-1">
+            Core Skill #3: Lead by <span class="text-emerald">Eliminating Friction</span> &amp; Spotting the <span class="text-amber">New Rock Stars</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            When one person saves 5 hours, a great leader makes sure the entire organization saves 50.
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- 3 Interactive Pillar Cards with Embedded Mini-SVGs -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; width: 100%; height: 600px;">
+
+            <!-- Pillar 1 -->
+            <div class="card-glass cyan-edge step" data-step="1" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">LEADERSHIP HABIT 01</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 16px;">Oversee Cross-Silo Inefficiencies</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  ICs see tasks; leaders see systems. Connect disconnected team workflows instead of adding headcount.
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <rect x="10" y="45" width="130" height="70" rx="10" fill="#131C31" stroke="#38BDF8" stroke-width="2" />
+                <text x="75" y="85" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="16" font-weight="600">Support Calls</text>
+                <path d="M 145 80 L 295 80" stroke="#38BDF8" stroke-width="3" class="svg-flow" />
+                <circle cx="220" cy="80" r="26" fill="#0B1325" stroke="#38BDF8" stroke-width="2" />
+                <text x="220" y="85" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="13" font-weight="700">AI</text>
+                <rect x="300" y="45" width="130" height="70" rx="10" fill="#131C31" stroke="#34D399" stroke-width="2" />
+                <text x="365" y="85" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="16" font-weight="600">Sales Decks</text>
+              </svg>
+              <div style="font-size: 16px; color: var(--cyan); font-family: 'JetBrains Mono';">
+                EXAMPLE: Auto-pipe call transcripts → live sales battlecards
+              </div>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="card-glass amber-edge step" data-step="2" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">LEADERSHIP HABIT 02</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 16px;">Identify the "New Rock Stars"</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  Stop rewarding the midnight manual grinder. Promote the restless builder who automates a 4-hour chore into 3 minutes.
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <rect x="15" y="30" width="185" height="100" rx="10" fill="rgba(255,255,255,0.03)" stroke="#475569" stroke-dasharray="5 5" />
+                <text x="107" y="72" text-anchor="middle" fill="#64748B" font-family="Space Grotesk" font-size="16">Old Grinder</text>
+                <text x="107" y="98" text-anchor="middle" fill="#FB7185" font-family="JetBrains Mono" font-size="13">Midnight Manual</text>
+
+                <rect x="230" y="20" width="195" height="120" rx="12" fill="rgba(245,158,11,0.16)" stroke="#F59E0B" stroke-width="2.5" />
+                <text x="327" y="65" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="700">★ NEW ROCK STAR</text>
+                <text x="327" y="94" text-anchor="middle" fill="#F8FAFC" font-family="Space Grotesk" font-size="18" font-weight="700">Workflow Builder</text>
+                <text x="327" y="118" text-anchor="middle" fill="#34D399" font-family="JetBrains Mono" font-size="13">4 hrs → 3 mins</text>
+              </svg>
+              <div style="font-size: 16px; color: var(--amber); font-family: 'JetBrains Mono';">
+                EXAMPLE: Reward tool-makers who share workflows
+              </div>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="card-glass emerald-edge step" data-step="3" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald);">LEADERSHIP HABIT 03</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 16px;">Coach &amp; Multiply Culture</h3>
+                <p style="font-size: 19px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  Remove the fear of automation. Turn individual AI breakthroughs into shared team playbooks every single week.
+                </p>
+              </div>
+              <svg viewBox="0 0 440 160" style="height: 150px;">
+                <circle cx="220" cy="80" r="30" fill="rgba(52,211,153,0.25)" stroke="#34D399" stroke-width="2.5" class="svg-pulse" />
+                <text x="220" y="85" text-anchor="middle" fill="#F8FAFC" font-family="JetBrains Mono" font-size="14" font-weight="700">1 WIN</text>
+                <g stroke="#34D399" stroke-width="2">
+                  <line x1="190" y1="80" x2="90" y2="40" /><line x1="190" y1="80" x2="90" y2="120" />
+                  <line x1="250" y1="80" x2="350" y2="40" /><line x1="250" y1="80" x2="350" y2="120" />
+                </g>
+                <circle cx="80" cy="35" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="80" cy="125" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="360" cy="35" r="16" fill="#131C31" stroke="#34D399" />
+                <circle cx="360" cy="125" r="16" fill="#131C31" stroke="#34D399" />
+              </svg>
+              <div style="font-size: 16px; color: var(--emerald); font-family: 'JetBrains Mono';">
+                EXAMPLE: 15-Min "Friday AI Show &amp; Tell" (5h × 10 = 50h)
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 11 — Core Skill #3: The Force-Multiplier Leader] (3 Steps)</strong></p>
+          <p>"<strong>Core Skill #3: How you scale from a high-performing individual into a leader of a competitive team.</strong></p>
+          <p><strong>[Click Step 1]</strong> <strong>1. Overseeing Inefficiencies Across Silos:</strong> Individual contributors see tasks; leaders see systems. Instead of hiring more headcount when sales and product are bogged down, connect their pipelines—so customer call transcripts automatically feed an AI agent that updates the sales team's battlecards in real time.</p>
+          <p><strong>[Click Step 2]</strong> <strong>2. Identifying the 'New Rock Stars':</strong> In the old era, the rock star was the grinder staying until midnight manually perfecting a spreadsheet. In the AI era, the new rock star is the restless experimenter who says, <em>'I hated doing this four-hour task, so I built an AI workflow that does it in three minutes—and shared it with the team.'</em></p>
+          <p><strong>[Click Step 3]</strong> <strong>3. Coaching and Influencing Culture:</strong> Run a 15-minute 'Friday AI Show-and-Tell' where one person demos a boring task they eliminated that week. When one person learns how to save five hours, a great leader makes sure the whole team saves fifty."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 12: CONCLUSION — THE MOONSHOT CHALLENGE (ORBITAL ROCKET) -->
+      <section class="slide" data-section="CONCLUSION · MOONSHOT" data-title="Moonshot Challenge: Launching a Rocket into Orbit">
+        <div>
+          <div class="eyebrow amber anim-in">OPEN-ENDED THOUGHT EXPERIMENT FOR THE AUDIENCE</div>
+          <h2 class="slide-title anim-in delay-1">
+            Moonshot Challenge: Build &amp; Launch a <span class="text-cyan">Rocket into Orbit</span>
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            Assume <strong style="color: var(--amber);">unlimited funding</strong>, zero aerospace background. What is needed, and what are your high-level steps?
+          </p>
+        </div>
+
+        <div class="stage-body">
+          <!-- Left: Orbital Rocket Blueprint SVG -->
+          <div class="visual-box anim-in delay-2" style="flex: 0.9; height: 610px; background: radial-gradient(circle at 50% 30%, rgba(56,189,248,0.14), rgba(8,12,24,0.9));">
+            <svg viewBox="0 0 680 560">
+              <!-- Telemetry Target Rings -->
+              <circle cx="340" cy="260" r="210" fill="none" stroke="rgba(56,189,248,0.18)" stroke-width="1.5" stroke-dasharray="8 8" class="svg-flow" />
+              <circle cx="340" cy="260" r="150" fill="none" stroke="rgba(245,158,11,0.18)" stroke-width="1.5" />
+
+              <!-- Rocket Body Blueprint -->
+              <g class="svg-float">
+                <!-- Nose Cone / Fairing -->
+                <path d="M 340 45 C 390 110, 395 165, 395 190 L 285 190 C 285 165, 290 110, 340 45 Z" fill="rgba(56,189,248,0.18)" stroke="#38BDF8" stroke-width="3" />
+                <!-- Avionics Bay -->
+                <rect x="285" y="190" width="110" height="55" fill="rgba(129,140,248,0.2)" stroke="#818CF8" stroke-width="3" />
+                <text x="340" y="223" text-anchor="middle" fill="#F8FAFC" font-family="JetBrains Mono" font-size="13" font-weight="700">AVIONICS</text>
+                <!-- Cryo Fuel Tank Stage -->
+                <rect x="285" y="245" width="110" height="150" fill="rgba(245,158,11,0.15)" stroke="#F59E0B" stroke-width="3" />
+                <text x="340" y="325" text-anchor="middle" fill="#F59E0B" font-family="JetBrains Mono" font-size="13" font-weight="700">PROPULSION</text>
+                <!-- Fins & Nozzles -->
+                <polygon points="285,335 235,415 285,395" fill="rgba(56,189,248,0.25)" stroke="#38BDF8" stroke-width="2.5" />
+                <polygon points="395,335 445,415 395,395" fill="rgba(56,189,248,0.25)" stroke="#38BDF8" stroke-width="2.5" />
+                <polygon points="300,395 285,435 330,435 325,395" fill="#F59E0B" />
+                <polygon points="355,395 350,435 395,435 380,395" fill="#F59E0B" />
+                <!-- Ignition Plume -->
+                <path d="M 305 440 Q 340 535 375 440" fill="rgba(251,113,133,0.45)" stroke="#F59E0B" stroke-width="3" class="svg-pulse" />
+              </g>
+
+              <text x="340" y="535" text-anchor="middle" fill="#38BDF8" font-family="JetBrains Mono" font-size="15" font-weight="700">BUDGET: UNLIMITED · CONSTRAINT: EXECUTION ARCHITECTURE</text>
+            </svg>
+          </div>
+
+          <!-- Right: 3 High-Level Steps -->
+          <div class="col-left" style="flex: 1.1; gap: 20px;">
+            <div class="card-glass cyan-edge step" data-step="1" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">STEP 01 · PAY-AS-YOU-GO DECONSTRUCTION</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 8px;">First-Principles Architecture via AI</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                Skip 8 years of aerospace PhD lectures. Use AI to decompose the rocket into propulsion, metallurgy, avionics, thermal shielding, and FAA/orbital licensing—learning trade-offs as decisions arise.
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge step" data-step="2" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(245,158,11,0.15); color: var(--amber);">STEP 02 · AI AS PRODUCTION &amp; SIMULATION ENGINE</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 8px;">Virtual CAD, Flight Code &amp; Physics Models</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                Before bending metal, use generative engineering &amp; Physical AI to generate flight-control code, optimize 3D injector geometries, and run 10,000 virtual fluid-dynamics combustion simulations.
+              </p>
+            </div>
+
+            <div class="card-glass emerald-edge step" data-step="3" style="padding: 24px 30px;">
+              <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald);">STEP 03 · ASSEMBLING THE COMPETITIVE TEAM</span>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 8px;">Hire Multi-Faceted Integrators with "Taste"</h3>
+              <p style="font-size: 18px; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+                Instead of 5,000 siloed engineers, recruit a lean strike team of domain veterans who can verify AI designs (90% vs. 100%), source physical hardware, and iterate fast on the launchpad.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 12 — The Moonshot Thought Experiment: Launching a Rocket] (3 Steps)</strong></p>
+          <p>"Earlier, we talked about how to build a wooden table. Before we wrap up, I want to scale that up into a hypothetical moonshot challenge for you to think about.</p>
+          <p>Imagine tomorrow morning, an investor hands you <strong>unlimited funding</strong> and gives you one mission: <strong>Build and launch a rocket into orbit.</strong> Assuming funding is not the bottleneck, what is actually needed, and what are your high-level steps?</p>
+          <p><strong>[Click Step 1]</strong> <strong>Step 1: First-Principles Deconstruction ('Pay-As-You-Go' Learning).</strong> You don't spend eight years in university studying astrophysics. You use AI to break a rocket down into its core subsystems—propulsion, metallurgy, avionics, thermal protection, and licensing—and absorb the deep engineering trade-offs as you make decisions.</p>
+          <p><strong>[Click Step 2]</strong> <strong>Step 2: AI as a Virtual Production &amp; Simulation Engine.</strong> Before bending a single piece of metal, use AI to generate flight-control code, CAD geometries, and thousands of virtual physics simulations.</p>
+          <p><strong>[Click Step 3]</strong> <strong>Step 3: Assembling and Leading the Human Team.</strong> With unlimited budget and AI handling the heavy cognitive math, you hire a lean team of multi-faceted integrators—domain experts with the 'taste' to verify AI-generated designs and assemble hardware in the real world."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 13: BEHIND THE SCENES — HOW THIS PRESENTATION WAS BUILT -->
+      <section class="slide" data-section="BEHIND THE SCENES" data-title="How Did I Prepare This Presentation?">
+        <div>
+          <div class="eyebrow emerald anim-in">BEHIND THE SCENES · REAL-WORLD HUMAN + AI COLLABORATION</div>
+          <h2 class="slide-title anim-in delay-1">
+            How Did I Prepare This <span class="text-cyan">Presentation</span>?
+          </h2>
+          <p class="subtitle anim-in delay-2">
+            This talk itself is a live demonstration of "Pay-As-You-Go" learning and AI as a production tool: <strong style="color: var(--amber);">I owned the direction and skeleton; AI built the flesh and polish.</strong>
+          </p>
+        </div>
+
+        <div class="stage-body" style="flex-direction: column; justify-content: space-between; gap: 28px;">
+          <!-- 4-Step Pipeline -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; width: 100%; flex: 1;">
+
+            <!-- Step 01 -->
+            <div class="card-glass cyan-edge step" data-step="1" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">STEP 01 · AI ASSISTED</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 14px;">Ingest Course &amp; Understand Syllabus</h3>
+                <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  First, I fed Professor Tina Zhang's course syllabus into AI to rapidly absorb the curriculum structure and what you had already covered.
+                </p>
+              </div>
+              <div style="font-family: 'Space Grotesk'; font-size: 56px; font-weight: 700; color: rgba(56,189,248,0.18); text-align: right; line-height: 1;">01</div>
+            </div>
+
+            <!-- Step 02 -->
+            <div class="card-glass cyan-edge step" data-step="2" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(56,189,248,0.15); color: var(--cyan);">STEP 02 · AI ASSISTED</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 14px;">Ask AI for Supplement Angles</h3>
+                <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  Asked AI to recommend complementary angles and the right level of depth to supplement your coursework.
+                </p>
+              </div>
+              <div style="font-family: 'Space Grotesk'; font-size: 56px; font-weight: 700; color: rgba(56,189,248,0.18); text-align: right; line-height: 1;">02</div>
+            </div>
+
+            <!-- Step 03 -->
+            <div class="card-glass amber-edge step" data-step="3" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(245,158,11,0.18); color: var(--amber);">STEP 03 · DONE BY ME</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 14px;">Wrote the Core Outline</h3>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px; font-size: 17px; color: var(--text-main); font-weight: 500;">
+                  <div style="padding: 6px 12px; background: rgba(245,158,11,0.12); border-radius: 6px;">① Opening Introduction</div>
+                  <div style="padding: 6px 12px; background: rgba(245,158,11,0.12); border-radius: 6px;">② How AI Changes Learning</div>
+                  <div style="padding: 6px 12px; background: rgba(245,158,11,0.12); border-radius: 6px;">③ AI as a Production Tool</div>
+                  <div style="padding: 6px 12px; background: rgba(245,158,11,0.12); border-radius: 6px;">④ Personal Skills &amp; Shifts</div>
+                  <div style="padding: 6px 12px; background: rgba(245,158,11,0.12); border-radius: 6px;">⑤ Team Scaling &amp; Examples</div>
+                </div>
+              </div>
+              <div style="font-family: 'Space Grotesk'; font-size: 56px; font-weight: 700; color: rgba(245,158,11,0.22); text-align: right; line-height: 1;">03</div>
+            </div>
+
+            <!-- Step 04 -->
+            <div class="card-glass emerald-edge step" data-step="4" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <span class="metric-badge" style="background: rgba(52,211,153,0.15); color: var(--emerald);">STEP 04 · AI PRODUCED</span>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 28px; margin-top: 14px;">Delegated All Flesh &amp; Polish to AI</h3>
+                <p style="font-size: 18px; color: var(--text-muted); line-height: 1.5; margin-top: 12px;">
+                  Built on top of my outline skeleton, AI generated the concrete examples, polished the script, and coded the entire interactive slide deck you are looking at right now.
+                </p>
+              </div>
+              <div style="font-family: 'Space Grotesk'; font-size: 56px; font-weight: 700; color: rgba(52,211,153,0.18); text-align: right; line-height: 1;">04</div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Division of Labor Bar -->
+          <div class="card-glass anim-in delay-3" style="width: 100%; padding: 22px 34px; display: flex; align-items: center; justify-content: space-between; gap: 32px;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 15px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.1em; white-space: nowrap;">
+              HUMAN–AI DIVISION OF LABOR
+            </div>
+            <div style="display: flex; flex: 1; gap: 24px;">
+              <div style="flex: 0.9; padding: 14px 22px; border-radius: 12px; background: rgba(245,158,11,0.14); border: 1px solid var(--border-amber); font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: var(--amber); text-align: center;">
+                Me: Set the Goal · Build the Skeleton · Exercise Judgment
+              </div>
+              <div style="flex: 1.3; padding: 14px 22px; border-radius: 12px; background: rgba(56,189,248,0.14); border: 1px solid var(--border-cyan); font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: var(--cyan); text-align: center;">
+                AI: Digest Materials · Suggest Angles · Fill Examples · Polish Copy · Build Slides
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 13 — Behind the Scenes: How I Prepared This Presentation] (4 Steps)</strong></p>
+          <p>"Before we summarize, let me share a quick behind-the-scenes look at how I actually built this presentation—because it is a live example of 'Pay-As-You-Go' learning and using AI as a production tool.</p>
+          <p><strong>[Click Step 1]</strong> <strong>Step 1:</strong> I imported Professor Tina Zhang's course syllabus into AI to quickly understand your curriculum and the cases you’ve already studied.</p>
+          <p><strong>[Click Step 2]</strong> <strong>Step 2:</strong> I asked AI to recommend where I could add the highest-value supplemental perspective and what depth would resonate best.</p>
+          <p><strong>[Click Step 3]</strong> <strong>Step 3 (Done by Me):</strong> I personally wrote the core structural outline—the opening, how AI changes learning, AI as a production tool, personal skills, and team scaling.</p>
+          <p><strong>[Click Step 4]</strong> <strong>Step 4 (AI Produced):</strong> Once I locked in that skeleton, I handed the rest over to AI—fleshing out the examples, polishing the script, and generating this entire interactive HTML slide deck. I set the goal, built the skeleton, and made the judgment calls; AI handled the heavy production."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 14: BRIEF SUMMARY SLIDE -->
+      <section class="slide" data-section="SUMMARY" data-title="Summary: How to Win in the AI Era">
+        <div>
+          <div class="eyebrow anim-in">EXECUTIVE SUMMARY</div>
+          <h2 class="slide-title anim-in delay-1">
+            Four Rules to <span class="text-cyan">Win</span> in the <span class="serif-italic text-amber">AI Era</span>
+          </h2>
+        </div>
+
+        <div class="stage-body">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; width: 100%; height: 620px;" class="anim-in delay-2">
+
+            <!-- Summary Item 1 -->
+            <div class="card-glass cyan-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(56,189,248,0.12)" stroke="#38BDF8" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#38BDF8" font-family="Space Grotesk" font-size="34" font-weight="700">01</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--cyan); font-weight: 700;">EVOLVE HOW YOU LEARN</div>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 6px;">Learn "Pay-As-You-Go"</h3>
+                <p style="font-size: 20px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;">
+                  Stop front-loading years of theory. Start building on Day 1 and pull deep, unbounded knowledge from AI on demand.
+                </p>
+              </div>
+            </div>
+
+            <!-- Summary Item 2 -->
+            <div class="card-glass amber-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(245,158,11,0.12)" stroke="#F59E0B" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#F59E0B" font-family="Space Grotesk" font-size="34" font-weight="700">02</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--amber); font-weight: 700;">EVOLVE HOW YOU PRODUCE</div>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 6px;">Retire the "Abacus Skills"</h3>
+                <p style="font-size: 20px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;">
+                  Offload manual white-collar artifacts (slides, sheets, docs, code) to AI. Pay the token cost and invest the sunk cost to master the new mental model.
+                </p>
+              </div>
+            </div>
+
+            <!-- Summary Item 3 -->
+            <div class="card-glass cyan-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(129,140,248,0.15)" stroke="#818CF8" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#818CF8" font-family="Space Grotesk" font-size="34" font-weight="700">03</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--indigo); font-weight: 700;">WIN AS AN INDIVIDUAL</div>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 6px;">Go Full-Stack in Your Vertical</h3>
+                <p style="font-size: 20px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;">
+                  Pair your domain taste with AI speed. Step out of your narrow lane and expand across the entire vertical pipeline of your industry.
+                </p>
+              </div>
+            </div>
+
+            <!-- Summary Item 4 -->
+            <div class="card-glass emerald-edge" style="display: flex; align-items: center; gap: 28px;">
+              <svg viewBox="0 0 110 110" style="width: 110px; height: 110px; flex-shrink: 0;">
+                <circle cx="55" cy="55" r="46" fill="rgba(52,211,153,0.15)" stroke="#34D399" stroke-width="3" />
+                <text x="55" y="66" text-anchor="middle" fill="#34D399" font-family="Space Grotesk" font-size="34" font-weight="700">04</text>
+              </svg>
+              <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 14px; color: var(--emerald); font-weight: 700;">WIN AS A COMPETITIVE TEAM</div>
+                <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 6px;">Lead as a Force Multiplier</h3>
+                <p style="font-size: 20px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;">
+                  Eliminate cross-team inefficiencies, reward the "new rock stars" who automate their own workflows, and coach everyone around you.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 14 — Summary: Four Rules to Win]</strong></p>
+          <p>"To wrap up what we covered today, if you only take four things away from this talk, let them be these:</p>
+          <p>1. <strong>Shift to 'Pay-As-You-Go' learning:</strong> Learn by building, and let AI remove the ceiling on how wide and deep you can go.</p>
+          <p>2. <strong>Let go of the 'Abacus skills':</strong> Whether you are gaining white-collar production skills for free or offloading old manual habits, embrace AI as your primary production engine.</p>
+          <p>3. <strong>Step out of your narrow lane:</strong> Use your freed-up time to become a multi-faceted player across your entire industry vertical.</p>
+          <p>4. <strong>Lead by multiplying others:</strong> Fix systemic bottlenecks, promote the restless experimenters who automate their own workflows, and coach your teams to share every breakthrough."</p>
+        </template>
+      </section>
+
+      <!-- SLIDE 15: Q&A AND OPEN DISCUSSION -->
+      <section class="slide" data-section="Q&A" data-title="Q&A and Open Discussion">
+        <div class="stage-body" style="flex-direction: column; justify-content: center; text-align: center; gap: 36px;">
+          <div class="eyebrow amber anim-in" style="margin: 0 auto;">OPEN FLOOR · INTERACTIVE DISCUSSION</div>
+          <h1 class="hero-title anim-in delay-1" style="font-size: 96px;">
+            Q&amp;A · <span class="serif-italic text-cyan">Let's Discuss</span>
+          </h1>
+          <p class="subtitle anim-in delay-2" style="margin: 0 auto; max-width: 960px;">
+            Thank you! Feel free to ask any question—or jump in on either of these two prompts:
+          </p>
+
+          <div style="display: flex; gap: 36px; width: 100%; max-width: 1480px; margin-top: 16px;" class="anim-in delay-3">
+            <div class="card-glass cyan-edge" style="flex: 1; text-align: left; padding: 38px;">
+              <div style="font-family: 'JetBrains Mono'; font-size: 15px; color: var(--cyan); font-weight: 700;">DISCUSSION PROMPT 01 · HUMAN–AI BOUNDARIES</div>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 14px; line-height: 1.25;">
+                What <span class="text-cyan">"Never Delegate to AI"</span> red lines would you set for yourself?
+              </h3>
+              <p style="font-size: 19px; color: var(--text-muted); margin-top: 12px;">
+                As more thinking and production get handed over to AI, which of your own capabilities are you most worried might atrophy—and how will you deliberately preserve independent judgment and deep thinking?
+              </p>
+            </div>
+
+            <div class="card-glass amber-edge" style="flex: 1; text-align: left; padding: 38px;">
+              <div style="font-family: 'JetBrains Mono'; font-size: 15px; color: var(--amber); font-weight: 700;">DISCUSSION PROMPT 02 · YOUR INDUSTRY</div>
+              <h3 style="font-family: 'Space Grotesk'; font-size: 32px; margin-top: 14px; line-height: 1.25;">
+                Which <span class="text-amber">"Abacus Skill"</span> in your job is the next to disappear?
+              </h3>
+              <p style="font-size: 19px; color: var(--text-muted); margin-top: 12px;">
+                What manual artifact or process in your company is ripe to be replaced by an AI workflow this year?
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <template class="speaker-notes">
+          <p><strong>[Slide 15 — Q&amp;A and Open Discussion]</strong></p>
+          <p>"Thank you all so much for your time and attention.</p>
+          <p>I’d love to open the floor now for Q&amp;A. You can ask me anything about what we covered today, share what personal 'red lines' you set for things you will never delegate to AI so your own judgment doesn't atrophy, or tell me which 'abacus skill' in your own industry you think is about to disappear first. Who wants to kick us off?"</p>
+        </template>
+      </section>
+
+    </div>
+
+    <!-- Speaker Notes Floating Drawer -->
+    <div id="notes-drawer">
+      <div class="notes-header">
+        <span>SPEAKER SCRIPT &amp; STAGE CUES (PRESS 'N' TO HIDE)</span>
+        <span id="notes-slide-indicator">SLIDE 01 / 15</span>
+      </div>
+      <div id="notes-content"></div>
+    </div>
+
+    <!-- Bottom HUD Bar -->
+    <div class="bottom-hud" onclick="event.stopPropagation();">
+      <div class="hud-left">
+        <span id="slide-counter" style="font-weight: 700; color: var(--text-main); min-width: 78px;">01 / 15</span>
+        <div class="progress-track">
+          <div id="progress-fill"></div>
+        </div>
+        <div class="step-dots" id="step-dots" title="Click-to-reveal steps on this slide"></div>
+      </div>
+      <div class="hud-right">
+        <button class="kbd-btn" id="btn-prev" title="Previous (Left Arrow)">← PREV</button>
+        <button class="kbd-btn" id="btn-next" title="Next Step / Slide (Right Arrow / Space)">NEXT →</button>
+        <button class="kbd-btn" id="btn-notes" title="Toggle Speaker Notes (N)">N · NOTES</button>
+        <button class="kbd-btn" id="btn-fullscreen" title="Toggle Fullscreen (F)">F · FULLSCREEN</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    const stage = document.getElementById('stage');
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const totalSlides = slides.length;
+    const slideCounter = document.getElementById('slide-counter');
+    const progressFill = document.getElementById('progress-fill');
+    const stepDotsContainer = document.getElementById('step-dots');
+    const hudSection = document.getElementById('hud-section');
+    const hudTopic = document.getElementById('hud-topic');
+    const notesDrawer = document.getElementById('notes-drawer');
+    const notesContent = document.getElementById('notes-content');
+    const notesSlideIndicator = document.getElementById('notes-slide-indicator');
+
+    let currentIndex = 0;
+
+    // 1. Scale 1920x1080 Stage to fit window
+    function updateScale() {
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
+      const scale = Math.min(scaleX, scaleY);
+      document.documentElement.style.setProperty('--scale', scale);
+    }
+    window.addEventListener('resize', updateScale);
+    updateScale();
+
+    // 2. Get steps for a slide
+    function getSlideSteps(slideEl) {
+      return Array.from(slideEl.querySelectorAll('.step'));
+    }
+
+    // 3. Render Slide & Sync URL Hash, Notes, and Step Dots
+    function goToSlide(index, revealAllSteps = false) {
+      if (index < 0 || index >= totalSlides) return;
+      currentIndex = index;
+
+      slides.forEach((s, idx) => {
+        const isActive = idx === currentIndex;
+        s.classList.toggle('active', isActive);
+        if (isActive) {
+          const steps = getSlideSteps(s);
+          steps.forEach(stepEl => {
+            stepEl.classList.toggle('visible', revealAllSteps);
+          });
+        }
+      });
+
+      const activeSlide = slides[currentIndex];
+      const numStr = String(currentIndex + 1).padStart(2, '0');
+      const totalStr = String(totalSlides).padStart(2, '0');
+      slideCounter.textContent = `${numStr} / ${totalStr}`;
+      notesSlideIndicator.textContent = `SLIDE ${numStr} / ${totalStr}`;
+      progressFill.style.width = `${((currentIndex + 1) / totalSlides) * 100}%`;
+
+      hudSection.textContent = activeSlide.dataset.section || 'KEYNOTE';
+      hudTopic.textContent = activeSlide.dataset.title || '';
+
+      // Update speaker notes
+      const template = activeSlide.querySelector('template.speaker-notes');
+      notesContent.innerHTML = template ? template.innerHTML : '<p>No speaker notes for this slide.</p>';
+
+      // Update URL hash (#1 to #15)
+      if (window.location.hash !== `#${currentIndex + 1}`) {
+        history.replaceState(null, null, `#${currentIndex + 1}`);
+      }
+
+      renderStepDots();
+    }
+
+    function renderStepDots() {
+      const activeSlide = slides[currentIndex];
+      const steps = getSlideSteps(activeSlide);
+      stepDotsContainer.innerHTML = '';
+      steps.forEach((stepEl, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'step-dot' + (stepEl.classList.contains('visible') ? ' active' : '');
+        dot.title = `Step ${i + 1}`;
+        stepDotsContainer.appendChild(dot);
+      });
+    }
+
+    // 4. Advance (Next Step or Next Slide)
+    function next() {
+      const activeSlide = slides[currentIndex];
+      const hiddenSteps = getSlideSteps(activeSlide).filter(s => !s.classList.contains('visible'));
+      if (hiddenSteps.length > 0) {
+        hiddenSteps[0].classList.add('visible');
+        renderStepDots();
+      } else if (currentIndex < totalSlides - 1) {
+        goToSlide(currentIndex + 1, false);
+      }
+    }
+
+    // 5. Previous (Hide Last Step or Previous Slide)
+    function prev() {
+      const activeSlide = slides[currentIndex];
+      const visibleSteps = getSlideSteps(activeSlide).filter(s => s.classList.contains('visible'));
+      if (visibleSteps.length > 0) {
+        visibleSteps[visibleSteps.length - 1].classList.remove('visible');
+        renderStepDots();
+      } else if (currentIndex > 0) {
+        goToSlide(currentIndex - 1, true);
+      }
+    }
+
+    // 6. Toggle Fullscreen
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // 7. Toggle Speaker Notes
+    function toggleNotes() {
+      notesDrawer.classList.toggle('open');
+    }
+
+    // Event Listeners
+    document.getElementById('btn-next').addEventListener('click', next);
+    document.getElementById('btn-prev').addEventListener('click', prev);
+    document.getElementById('btn-notes').addEventListener('click', toggleNotes);
+    document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    // Click on stage to advance (ignore clicks inside notes drawer)
+    stage.addEventListener('click', (e) => {
+      if (notesDrawer.contains(e.target)) return;
+      next();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        getSlideSteps(slides[currentIndex]).forEach(s => s.classList.add('visible'));
+        renderStepDots();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        toggleNotes();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    // Sync from URL Hash (#3)
+    function syncFromHash() {
+      const hashNum = parseInt(window.location.hash.replace('#', ''), 10);
+      if (!isNaN(hashNum) && hashNum >= 1 && hashNum <= totalSlides) {
+        goToSlide(hashNum - 1, false);
+      } else {
+        goToSlide(0, false);
+      }
+    }
+    window.addEventListener('hashchange', syncFromHash);
+    syncFromHash();
+
+    // 8. Subtle Animated Neural Constellation Canvas Background
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    const nodes = Array.from({ length: 38 }, () => ({
+      x: Math.random() * 1920,
+      y: Math.random() * 1080,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 2 + 1
+    }));
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, 1920, 1080);
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > 1920) n.vx *= -1;
+        if (n.y < 0 || n.y > 1080) n.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.fill();
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const m = nodes[j];
+          const dx = n.x - m.x;
+          const dy = n.y - m.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 220) {
+            ctx.beginPath();
+            ctx.moveTo(n.x, n.y);
+            ctx.lineTo(m.x, m.y);
+            ctx.strokeStyle = `rgba(56, 189, 248, ${(1 - dist / 220) * 0.12})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animateCanvas);
+    }
+    animateCanvas();
+  })();
+</script>
+</body>
+</html>
